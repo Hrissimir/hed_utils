@@ -1,14 +1,12 @@
 import logging
 import re
-
 from collections import namedtuple
 from datetime import datetime
-from os.path import basename
 from operator import attrgetter
+from os.path import basename
 from typing import List, Optional, Iterable
 
 import psutil
-
 from tabulate import tabulate
 
 _log = logging.getLogger(__name__)

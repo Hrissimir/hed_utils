@@ -22,15 +22,6 @@ def _parse_args(args):
     return parser.parse_args(args)
 
 
-def _print_victims(victims, invocation_details):
-    print()
-    if victims:
-        print(ps_tool.format_processes(victims))
-        print("\nTotal of [ %s ] victims! ( %s )" % (len(victims), invocation_details))
-    else:
-        print("No victims!")
-
-
 def main(args):
     """Main entry point allowing external calls
 
@@ -44,7 +35,7 @@ def main(args):
     by = args.by
     value = args.value
 
-    invocation_details = f"'rkill' called with args: [ kill='{kill}', by='{by}', value='{value}' ]"
+    invocation_details = f"'rkill' called with args: kill='{kill}', by='{by}', value='{value}'"
     print(invocation_details)
 
     funcs_map = {"pid": ps_tool.kill_process_by_pid,
@@ -54,7 +45,13 @@ def main(args):
     kill_func = funcs_map[by]
     dry = not (kill.lower() == "y")
     victims = kill_func(value, dry=dry)
-    _print_victims(victims, invocation_details)
+
+    if victims:
+        print()
+        print(ps_tool.format_processes(victims))
+        print(f"\nTotal of [ {len(victims)} ] victims! ( {invocation_details} )")
+    else:
+        print("rkill: No matching processes!")
 
 
 def run():
