@@ -113,29 +113,32 @@ def kill_process(pid: int) -> bool:  # pragma: no cover
 
 
 def _prepare_victims(initial_targets: Iterable[ProcessDetails]):
-    pids = set(t.pid for t in initial_targets)
-    resulting_victims = list(initial_targets)
+    current_pid = psutil.Process().pid  # avoid suicide
+    victims = {target.pid: target
+               for target
+               in initial_targets
+               if target.pid != current_pid}
 
     while True:
-        initial_size = len(resulting_victims)
+        initial_size = len(victims)
 
         for process in iter_processes():
-            if process.pid in pids:
+            if (process.pid in victims) or (process.pid == current_pid):
                 continue
-            elif process.ppid in pids:
-                resulting_victims.append(process)
-                pids.add(process.pid)
+            elif process.ppid in victims:
+                victims[process.pid] = process
 
-        if len(resulting_victims) == initial_size:
+        if len(victims) == initial_size:
             break
 
-    return list(sorted(resulting_victims, key=attrgetter("create_time"), reverse=True))
+    return list(sorted(victims.values(), key=attrgetter("create_time"), reverse=True))
 
 
 def rkill(targets: List[ProcessDetails], dry=True) -> List[ProcessDetails]:
     """Recursively kill the process, starting with it's children."""
 
     victims = _prepare_victims(targets)
+
     if victims:
         _log.info("The following processes are marked for killing:\n\n%s", format_processes(victims))
 
