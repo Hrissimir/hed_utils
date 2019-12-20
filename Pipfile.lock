@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e6459fb9c6e0c6cb35aba478c8c1229837bca9c2adba8864f30445506cdb6ad1"
+            "sha256": "67c105c7906894f99ab38e4834ad0c539bcdc33327f9568ca31ca4d7aecbb30f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -33,13 +33,28 @@
             "index": "pypi",
             "version": "==5.6.7"
         },
+        "pytz": {
+            "hashes": [
+                "sha256:1c557d7d0e871de1f5ccd5833f60fb2550652da6be2693c1e02300743d21500d",
+                "sha256:b02c06db6cf09c12dd25137e563b31700d3b80fcc4ad23abb7a315f2789819be"
+            ],
+            "index": "pypi",
+            "version": "==2019.3"
+        },
         "tabulate": {
             "hashes": [
-                "sha256:5470cc6687a091c7042cee89b2946d9235fe9f6d49c193a4ae2ac7bf386737c8",
-                "sha256:c704ef7d0a801425f143c6be80f00fa3bb85a42bd5e4ff8d8b835b8371d06dfe"
+                "sha256:5470cc6687a091c7042cee89b2946d9235fe9f6d49c193a4ae2ac7bf386737c8"
             ],
             "index": "pypi",
             "version": "==0.8.6"
+        },
+        "tzlocal": {
+            "hashes": [
+                "sha256:11c9f16e0a633b4b60e1eede97d8a46340d042e67b670b290ca526576e039048",
+                "sha256:949b9dd5ba4be17190a80c0268167d7e6c92c62b30026cf9764caf3e308e5590"
+            ],
+            "index": "pypi",
+            "version": "==2.0.0"
         }
     },
     "develop": {
@@ -454,6 +469,7 @@
                 "sha256:1c557d7d0e871de1f5ccd5833f60fb2550652da6be2693c1e02300743d21500d",
                 "sha256:b02c06db6cf09c12dd25137e563b31700d3b80fcc4ad23abb7a315f2789819be"
             ],
+            "index": "pypi",
             "version": "==2019.3"
         },
         "pyyaml": {
