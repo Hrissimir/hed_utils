@@ -2,6 +2,7 @@ import itertools
 import re
 from datetime import datetime, timedelta
 from unittest import TestCase
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -77,3 +78,82 @@ class TestTimedeltaParser(TestCase):
             parsed_value = TimedeltaParser.parse(time_text)
 
             assert parsed_value == expected_value
+
+
+def test_busy_wait():
+    """Tests waiter.stopwatch as side-effect"""
+
+    from timeit import default_timer as now
+
+    duration = 0.2
+
+    start = now()
+    time_tool.busy_wait(duration)
+    took = now() - start
+
+    took_vs_duration_percent = (took / duration) * 100
+    assert took_vs_duration_percent > 99.999
+
+
+def test_poll_for_result_returns_result():
+    obj = object()
+
+    def func():
+        return obj
+
+    assert time_tool.poll_for_result(func, timeout_seconds=1) is obj
+
+
+def test_poll_for_result_returns_default_on_timeout():
+    obj = object()
+
+    def func():
+        return False
+
+    result = time_tool.poll_for_result(func, timeout_seconds=0.1, default=obj)
+    assert result is obj
+
+
+def test_poll_for_result_raises_default_on_timeout():
+    def func():
+        return False
+
+    with pytest.raises(TimeoutError):
+        time_tool.poll_for_result(func, timeout_seconds=0.1, default=TimeoutError)
+
+    with pytest.raises(RuntimeError):
+        err = RuntimeError()
+        time_tool.poll_for_result(func, timeout_seconds=0.1, default=err)
+
+
+def test_poll_for_result_propagate_poll_errors():
+    mock_func = Mock()
+    mock_func.side_effect = RuntimeError
+    with pytest.raises(RuntimeError):
+        time_tool.poll_for_result(mock_func, timeout_seconds=0.1, ignore_errors=False)
+
+
+def test_poll_for_result_ignore_all_poll_errors():
+    mock_func = Mock()
+    mock_func.side_effect = RuntimeError
+    time_tool.poll_for_result(mock_func, timeout_seconds=0.1)
+
+
+def test_poll_for_result_ignore_specific_poll_errors():
+    mock_func = Mock()
+
+    mock_func.side_effect = RuntimeError
+    time_tool.poll_for_result(mock_func, timeout_seconds=0.1, ignore_errors=[RuntimeError])
+
+    mock_func.side_effect = OSError
+    with pytest.raises(OSError):
+        time_tool.poll_for_result(mock_func, timeout_seconds=0.1, ignore_errors=[RuntimeError])
+
+
+def test_poll_for_result_passes_args_kwargs():
+    expected_call = call(1, 2, 3, fourth=4)
+    args = (1, 2, 3)
+    kwargs = dict(fourth=4)
+    mock_func = Mock()
+    time_tool.poll_for_result(mock_func, timeout_seconds=0.1, args=args, kwargs=kwargs)
+    assert mock_func.mock_calls[0] == expected_call

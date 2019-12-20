@@ -1,8 +1,9 @@
+import inspect
 import re
 import time
 from datetime import datetime, timedelta
 from timeit import default_timer as now
-from typing import Union, Optional
+from typing import Callable, Iterable, Type, Union, Optional
 
 import pytz
 import tzlocal
@@ -149,6 +150,80 @@ def countdown_timer(duration_seconds: Union[int, float]):
         return now() > end_time
 
     return elapsed
+
+
+def busy_wait(duration_seconds: Union[int, float]):
+    elapsed = countdown_timer(duration_seconds)
+    while not elapsed():
+        continue
+
+
+def poll_for_result(func: Callable, *,  # noqa: C901
+                    timeout_seconds: Union[int, float],
+                    args: tuple = None,
+                    kwargs: dict = None,
+                    poll_frequency: Union[int, float] = 0.1,
+                    ignore_errors: Union[bool, Iterable[Type]] = True,
+                    default=None):
+    """Polls a function until it returns truthful result or the given timeout elapses.
+
+        - If result is attained before the timeout elapses, this result is returned.
+        - If exception is raised during a poll, it is processed according to the 'ignore_errors' argument.
+        - If no result was attained during the poll, the value of 'default' argument will be returned.
+        - If the default value is exception class or instance, it will be raised instead of returned.
+
+    Arguments:
+
+        func(callable):             The function that is to be polled.
+
+        timeout_seconds(int,float): Time-span in which the polled func must return a truthful result.
+
+        args(tuple):                Tuple with positional arguments for the polls.
+
+        kwargs(dict):               Dict with keyword arguments for the polls.
+
+        poll_frequency(int,float):  Duration of the pause (seconds) between consecutive polls.
+
+        ignore_errors(bool,list):   If a bool is passed, poll errors will be ignored(True)/reraised(False).
+                                    A list with ignored exception types can be passed to ignore specific errors only.
+
+        default:                    This value will be returned in case of timeout.
+                                    If exception type/instance is passed, then it will be raised instead of returned
+    """
+
+    assert callable(func)
+
+    if isinstance(ignore_errors, Iterable):
+        for item in ignore_errors:
+            assert inspect.isclass(item)
+
+    args = args or tuple()
+    kwargs = kwargs or dict()
+
+    has_elapsed = countdown_timer(timeout_seconds)
+    while not has_elapsed():
+        try:
+            result = func(*args, **kwargs)
+            if result:
+                return result
+        except Exception as ex:
+            if isinstance(ignore_errors, bool):
+                if not ignore_errors:
+                    raise
+            else:
+                should_ignore = type(ex) in ignore_errors
+                if not should_ignore:
+                    raise
+
+        busy_wait(poll_frequency)
+
+    if inspect.isclass(default) and issubclass(default, Exception):
+        raise default()
+
+    if isinstance(default, Exception):
+        raise default
+
+    return default
 
 
 class Timer:
