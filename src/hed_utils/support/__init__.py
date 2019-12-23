@@ -4,6 +4,7 @@ from hed_utils.support import profiler
 from hed_utils.support import ps_tool
 from hed_utils.support import text_tool
 from hed_utils.support import time_tool
+from hed_utils.support import web_tool
 
 __all__ = [
     "log",
@@ -12,4 +13,5 @@ __all__ = [
     "ps_tool",
     "text_tool",
     "time_tool",
+    "web_tool"
 ]
