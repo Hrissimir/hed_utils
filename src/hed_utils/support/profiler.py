@@ -1,7 +1,6 @@
 import cProfile
 import logging
 from io import StringIO
-from pathlib import Path
 from pstats import Stats
 
 _log = logging.getLogger(__name__)
@@ -26,11 +25,11 @@ class Profiler:
         self._is_enabled = True
 
     def disable(self):
-        _log.debug("disabling profiler...")
         if not self.is_enabled:
             raise Exception("Already disabled!")
         self._profile.disable()
         self._is_enabled = False
+        _log.debug("disabled profiler")
 
     def __enter__(self):
         self.enable()
@@ -39,12 +38,10 @@ class Profiler:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.disable()
 
-    def generate_report(self, *, strip_dirs=True, sort_by="cumtime", top=50, callees=True, callers=True) -> str:
-        _log.debug("generating profiler report... "
-                   f"(strip_dirs={strip_dirs}, sort_by='{sort_by}', top={top}, callees={callees}, callers={callers})")
-
+    def get_stats(self, *, strip_dirs=True, sort_by="cumtime", top=50) -> str:
+        _log.debug(f"generating profiler stats report... (strip_dirs={strip_dirs}, sort_by='{sort_by}', top={top})")
         if self.is_enabled:
-            raise Exception("Profiler is enabled!")
+            raise Exception("Can't create stats, because profiler is still enabled!")
 
         buffer = StringIO()
         stats = Stats(self._profile, stream=buffer)
@@ -60,28 +57,4 @@ class Profiler:
         else:
             stats.print_stats()
 
-        if callees:
-            buffer.write("\nCallees:\n")
-            if top:
-                stats.print_callees(top)
-            else:
-                stats.print_callees()
-
-        if callers:
-            buffer.write("\nCallers:\n")
-            if top:
-                stats.print_callers(top)
-            else:
-                stats.print_callers()
-
         return buffer.getvalue()
-
-    def write_report(self, file, *, strip_dirs=True, sort_by="cumtime", top=50, callees=True, callers=True):
-        file_path = Path(file).resolve()
-        _log.debug("writing profiler report to file: '%s'", str(file_path))
-        report = self.generate_report(strip_dirs=strip_dirs,
-                                      sort_by=sort_by,
-                                      top=top,
-                                      callees=callees,
-                                      callers=callers)
-        file_path.write_text(report, encoding="utf-8")
