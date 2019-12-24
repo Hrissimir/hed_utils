@@ -3,47 +3,46 @@ from configparser import ConfigParser
 from io import StringIO
 from pathlib import Path
 from typing import List
-from unittest import mock
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
 
 
-def print_section(section_name: str, config: ConfigParser):
-    assert isinstance(section_name, str), f"Expected string, Got {type(section_name).__name__}"
-    assert bool(section_name), "Section name was empty"
-    assert isinstance(config, ConfigParser), f"Expected ConfigParser, Got: '{type(config).__name__}'"
+def format_section(section_name: str, config: ConfigParser) -> str:
+    """Formats ConfigParser section to printable string."""
 
-    print()
-    print(f"[{section_name}]")
+    buffer = StringIO(initial_value="\n")
+
+    print(f"[{section_name}]", file=buffer)
     section = config[section_name]
     for key in section.keys():
-        print(f"{key} = {section[key]}")
+        print(f"{key} = {section[key]}", file=buffer)
 
-
-def format_section(section_name: str, config: ConfigParser) -> str:
-    with mock.patch("sys.stdout", new=StringIO()) as fake_out:
-        print_section(section_name, config)
-        return fake_out.getvalue()
-
-
-def print_config(config: ConfigParser):
-    for section_name in config.keys():
-        print_section(section_name, config)
+    return buffer.getvalue()
 
 
 def format_config(config: ConfigParser) -> str:
-    with mock.patch("sys.stdout", new=StringIO()) as fake_out:
-        print_config(config)
-        return fake_out.getvalue()
+    """Formats the given ConfigParser contents to a printable string."""
+
+    buffer = StringIO()
+    config.write(buffer)
+    return buffer.getvalue()
+
+
+def print_section(section_name: str, config: ConfigParser):
+    print(format_section(section_name, config))
+
+
+def print_config(config: ConfigParser):
+    print(format_config(config))
 
 
 def read_config(file: str, interpolation=None) -> ConfigParser:
     _log.info("reading config (interpolation=%s) from file: '%s'", interpolation, file)
 
-    file_path = str(Path(file))
+    file_path = Path(file).resolve()
     config = ConfigParser(interpolation=interpolation)
-    with open(file_path, "r") as configfile:
+    with file_path.open(mode="r") as configfile:
         config.read_file(configfile)
 
     _log.info("done reading config from '%s' got:\n%s", file_path, format_config(config))
@@ -53,11 +52,11 @@ def read_config(file: str, interpolation=None) -> ConfigParser:
 def write_config(config: ConfigParser, file: str):
     assert isinstance(config, ConfigParser), f"Expected ConfigParser, Got: '{type(config).__name__}'"
 
-    file_path = Path(file)
-    _log.info("writing config to file: '%s'", file_path)
-    with file_path.open(mode="wb") as out:
-        out.write(format_config(config).encode("utf-8"))
-    _log.debug("done writing config to: '%s'", file_path)
+    file_path = Path(file).resolve()
+    _log.debug("writing config to file: '%s'", file_path)
+
+    file_path.write_text(format_config(config), encoding="utf-8")
+    _log.info("saved config to: '%s'", file_path)
 
 
 class ConfigSection:
