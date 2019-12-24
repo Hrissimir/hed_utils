@@ -22,8 +22,8 @@ class ThreadLocalDriver(DriverWrapper):
         cls._storage.instance = instance
 
     @property
-    def wrapped_driver(self) -> WebDriver:
-        if hasattr(self._storage, "instance"):
+    def wrapped_driver(self) -> Optional[WebDriver]:
+        if not hasattr(self._storage, "instance"):
             self._storage.instance = None
 
         return self._storage.instance

@@ -17,55 +17,55 @@ class FindBy:
 
     @classmethod
     def ID(cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.ID, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.ID, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def NAME(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.NAME, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.NAME, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def CSS_SELECTOR(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.CSS_SELECTOR, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.CSS_SELECTOR, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def XPATH(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.XPATH, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.XPATH, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def TAG_NAME(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.TAG_NAME, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.TAG_NAME, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def CLASS_NAME(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.CLASS_NAME, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.CLASS_NAME, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def LINK_TEXT(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.LINK_TEXT, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.LINK_TEXT, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)
 
     @classmethod
     def PARTIAL_LINK_TEXT(
             cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.PARTIAL_LINK_TEXT, value, timeout, visible_only, required, desc),
+        locator = new_locator(By.PARTIAL_LINK_TEXT, value, timeout, visible_only, required, desc)
         context = context or cls.driver
         return ElementFinder(locator, context)

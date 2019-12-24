@@ -150,15 +150,6 @@ class DriverWrapper(WebDriver):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(instance={repr(self.wrapped_driver)})"
 
-    def __getattr__(self, name):
-        return getattr(self.wrapped_driver, name)
-
-    def __setattr__(self, name, value):
-        if name.startswith("_"):
-            super().__setattr__(name, value)
-        else:
-            setattr(self.wrapped_driver, name, value)
-
     def __enter__(self):
         _log.debug("entering DriverWrapper context...")
         return self

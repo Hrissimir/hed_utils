@@ -18,15 +18,6 @@ class ElementWrapper(WebElement):
     def __init__(self, element: WebElement):
         self._wrapped_element = element.wrapped_element if isinstance(element, ElementWrapper) else element
 
-    def __getattr__(self, name):
-        return getattr(self.wrapped_element, name)
-
-    def __setattr__(self, name, value):
-        if name.startswith("_"):
-            super().__setattr__(name, value)
-        else:
-            setattr(self.wrapped_element, name, value)
-
     def __eq__(self, element):
         return hasattr(element, 'id') and self.id == element.id
 

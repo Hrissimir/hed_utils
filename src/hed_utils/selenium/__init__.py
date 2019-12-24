@@ -3,19 +3,14 @@ from selenium.webdriver.common.keys import Keys
 
 from hed_utils.selenium.defaults import IGNORED_EXCEPTIONS as SELENIUM_EXCEPTIONS
 
-from hed_utils.selenium.drivers import (
-    chrome_driver,
-    opera_driver,
-    DriverWrapper,
-    ThreadLocalDriver
-)
+from hed_utils.selenium.drivers import chrome_driver
+from hed_utils.selenium.drivers import opera_driver
+from hed_utils.selenium.drivers.driver_wrapper import DriverWrapper
+from hed_utils.selenium.drivers.threadlocal_driver import ThreadLocalDriver
 
-from hed_utils.selenium.elements import (
-    Locator,
-    ElementWrapper,
-    ElementFinder,
-    FindBy
-)
+from hed_utils.selenium.elements.element_wrapper import ElementWrapper
+from hed_utils.selenium.elements.find_by import FindBy
+
 
 
 # prepare live console with single import 'from hed_utils.selenium import *'
@@ -27,8 +22,6 @@ __all__ = [
     "opera_driver",
     "DriverWrapper",
     "ThreadLocalDriver",  # ThreadLocalDriver.set_instance(chrome_driver.create_instance())
-    "Locator",
     "ElementWrapper",
-    "ElementFinder",
     "FindBy",  # FindBy.NAME("q").send_keys("selenium")
 ]
