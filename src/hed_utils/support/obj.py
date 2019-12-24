@@ -51,7 +51,10 @@ def get_attribute_details(obj, attribute_name: str, *, try_call=False) -> Attrib
                             tries to call it and add the result to the details.
     """
 
-    attribute = getattr(obj, attribute_name, MISSING)
+    try:
+        attribute = getattr(obj, attribute_name, MISSING)
+    except BaseException as err:
+        return AttributeDetails(attribute_name, None, None, None, "<ERROR-GETTING-ATTRIBUTE>", str(err))
 
     if attribute is MISSING:
         return AttributeDetails(attribute_name, None, None, None, "<NO-SUCH-ATTR>", None)
