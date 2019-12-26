@@ -44,16 +44,14 @@ def find_element(locator: Locator, context: Union[WebDriver, WebElement]):
             else:
                 timer.start()
 
-    if element:
-        _log.debug("Found (element): %s in %.03f s.", locator, timer.elapsed)
-        return element
-    else:
+    if not element:
         _log.warning("Not found (element): %s in %.03f s.", locator, timer.elapsed)
+        if locator.required:
+            raise NoSuchElementException(str(locator))
+    else:
+        _log.debug("Found (element): %s in %.03f s.", locator, timer.elapsed)
 
-    if locator.required:
-        raise NoSuchElementException(str(locator))
-
-    return None
+    return element
 
 
 def find_elements(locator: Locator, context: Union[WebDriver, WebElement]) -> List[WebElement]:
@@ -66,13 +64,11 @@ def find_elements(locator: Locator, context: Union[WebDriver, WebElement]) -> Li
             else:
                 timer.start()
 
-    if elements:
-        _log.debug("Found (elements): %s x %s in %.03f s.", len(elements), locator, timer.elapsed)
-        return elements
-    else:
+    if not elements:
         _log.warning("Not found (elements): %s in %.03f s.", locator, timer.elapsed)
+        if locator.required:
+            raise NoSuchElementException(str(locator))
+    else:
+        _log.debug("Found (elements): %s x %s in %.03f s.", len(elements), locator, timer.elapsed)
 
-    if locator.required:
-        raise NoSuchElementException(str(locator))
-
-    return []
+    return elements
