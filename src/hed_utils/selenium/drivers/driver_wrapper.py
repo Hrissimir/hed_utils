@@ -12,11 +12,11 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.mobile import Mobile
 from selenium.webdriver.remote.switch_to import SwitchTo
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 from hed_utils.selenium import defaults
-from hed_utils.selenium.elements.element_wrapper import ElementWrapper
 from hed_utils.support import os_type
 from hed_utils.support.time_tool import Timer
 
@@ -160,7 +160,7 @@ class DriverWrapper(WebDriver):
 
     @contextmanager
     def file_detector_context(self, file_detector_class, *args, **kwargs):
-        yield self.wrapped_driver.file_detector_context(file_detector_class, *args, **kwargs)
+        yield from self.wrapped_driver.file_detector_context(file_detector_class, *args, **kwargs)
 
     @property
     def file_detector(self):
@@ -176,7 +176,7 @@ class DriverWrapper(WebDriver):
 
     @orientation.setter
     def orientation(self, value):
-        _log.debug("browser: setting orientation '%s'", value)
+        _log.debug("driver: setting orientation '%s'", value)
         self.wrapped_driver.orientation = value
 
     @property
@@ -192,7 +192,7 @@ class DriverWrapper(WebDriver):
         return BeautifulSoup(self.page_source, "lxml")
 
     @property
-    def body_element(self) -> ElementWrapper:
+    def body_element(self) -> WebElement:
         return self.find_element_by_tag_name("body")
 
     @property
@@ -218,7 +218,7 @@ class DriverWrapper(WebDriver):
     @property
     def log_types(self) -> List[str]:
         log_types = self.wrapped_driver.log_types
-        _log.debug("browser: available log types - %s", log_types)
+        _log.debug("driver: available log types - %s", log_types)
         return log_types
 
     @property
@@ -241,28 +241,28 @@ class DriverWrapper(WebDriver):
     def title(self) -> str:
         return self.wrapped_driver.title
 
-    def switch_to_active_element(self) -> ElementWrapper:
-        _log.debug("browser: switch to active element")
-        return ElementWrapper(self.switch_to.active_element)
+    def switch_to_active_element(self) -> WebElement:
+        _log.debug("driver: switch to active element")
+        return self.switch_to.active_element
 
     def switch_to_alert(self) -> Alert:
-        _log.debug("browser: switch to alert")
+        _log.debug("driver: switch to alert")
         return self.switch_to.alert
 
     def switch_to_default_content(self):
-        _log.debug("browser: switch to default content")
+        _log.debug("driver: switch to default content")
         self.switch_to.default_content()
 
     def switch_to_frame(self, frame_reference):
-        _log.debug("browser: switch to frame '%s'", frame_reference)
+        _log.debug("driver: switch to frame '%s'", frame_reference)
         self.switch_to.frame(frame_reference)
 
     def switch_to_window(self, window_name):
-        _log.debug("browser: switch to window: '%s'", window_name)
+        _log.debug("driver: switch to window: '%s'", window_name)
         self.switch_to.window(window_name)
 
     def open_new_tab(self):
-        _log.debug("browser: open new tab and switch to it")
+        _log.debug("driver: open new tab and switch to it")
         current_handles = self.window_handles
         key = Keys.COMMAND if os_type.is_mac() else Keys.CONTROL
         self.body_element.send_keys(key + "t")
@@ -270,7 +270,7 @@ class DriverWrapper(WebDriver):
         self.switch_to_window(self.window_handles[-1])
 
     def close(self):
-        _log.debug("browser: close current window")
+        _log.debug("driver: close current window")
         driver = self.wrapped_driver
         current_handle = driver.current_window_handle
         other_handles = [handle for handle in driver.window_handles if handle != current_handle]
@@ -282,29 +282,29 @@ class DriverWrapper(WebDriver):
         driver.switch_to.window(other_handles[-1])
 
     def quit(self):
-        _log.debug("browser: quit...")
+        _log.debug("driver: quit...")
         self.wrapped_driver.quit()
 
     def back(self, wait_for_page_load=True):
-        _log.debug("browser navigation: Back (wait_for_page_load=%s)", wait_for_page_load)
+        _log.debug("driver navigation: Back (wait_for_page_load=%s)", wait_for_page_load)
         self.wrapped_driver.back()
         if wait_for_page_load:
             self.wait_for_page_load()
 
     def forward(self, wait_for_page_load=True):
-        _log.debug("browser navigation: Forward (wait_for_page_load=%s)", wait_for_page_load)
+        _log.debug("driver navigation: Forward (wait_for_page_load=%s)", wait_for_page_load)
         self.wrapped_driver.forward()
         if wait_for_page_load:
             self.wait_for_page_load()
 
     def refresh(self, wait_for_page_load=True):
-        _log.debug("browser navigation: Refresh (wait_for_page_load=%s)", wait_for_page_load)
+        _log.debug("driver navigation: Refresh (wait_for_page_load=%s)", wait_for_page_load)
         self.wrapped_driver.back()
         if wait_for_page_load:
             self.wait_for_page_load()
 
     def get(self, url, *, wait_for_url_change=False, wait_for_page_load=True):
-        _log.debug("browser navigation: Get ( url='%s', wait_for_url_change=%s, wait_for_page_load=%s)",
+        _log.debug("driver navigation: Get ( url='%s', wait_for_url_change=%s, wait_for_page_load=%s)",
                    url, wait_for_url_change, wait_for_page_load)
 
         url_before_change = self.current_url
@@ -332,11 +332,11 @@ class DriverWrapper(WebDriver):
             driver.get_log('server')
         """
 
-        _log.debug("browser: getting log '%s'", log_type)
+        _log.debug("driver: getting log '%s'", log_type)
         return self.wrapped_driver.get_log(log_type)
 
     def add_cookie(self, cookie_dict):
-        _log.debug("browser: add cookie %s", cookie_dict)
+        _log.debug("driver: add cookie %s", cookie_dict)
         self.wrapped_driver.add_cookie(cookie_dict)
 
     def get_cookies(self) -> List[dict]:
@@ -350,11 +350,11 @@ class DriverWrapper(WebDriver):
         return cookie
 
     def delete_cookie(self, name):
-        _log.debug("browser: delete cookie '%s'", name)
+        _log.debug("driver: delete cookie '%s'", name)
         self.wrapped_driver.delete_cookie(name)
 
     def delete_all_cookies(self):
-        _log.debug("browser: delete all cookies")
+        _log.debug("driver: delete all cookies")
         self.wrapped_driver.delete_all_cookies()
 
     def execute(self, driver_command, params=None):
@@ -370,7 +370,7 @@ class DriverWrapper(WebDriver):
         return self.wrapped_driver.execute_async_script(script, *args)
 
     def scroll_page(self, x: int, y: int):
-        _log.debug("browser: scroll page by: x=%s, y=%s", x, y)
+        _log.debug("driver: scroll page by: x=%s, y=%s", x, y)
         self.wrapped_driver.execute_script(f"document.scrollingElement.scrollBy({x},{y});")
 
     def implicitly_wait(self, time_to_wait):
@@ -386,15 +386,15 @@ class DriverWrapper(WebDriver):
         self.wrapped_driver.set_page_load_timeout(time_to_wait)
 
     def maximize_window(self):
-        _log.debug("browser: maximize window")
+        _log.debug("driver: maximize window")
         self.wrapped_driver.maximize_window()
 
     def minimize_window(self):
-        _log.debug("browser: minimize window")
+        _log.debug("driver: minimize window")
         self.wrapped_driver.minimize_window()
 
     def fullscreen_window(self):
-        _log.debug("browser: fullscreen window")
+        _log.debug("driver: fullscreen window")
         self.wrapped_driver.fullscreen_window()
 
     def get_screenshot_as_file(self, filename):
@@ -410,46 +410,46 @@ class DriverWrapper(WebDriver):
         return self.wrapped_driver.get_screenshot_as_base64()
 
     def save_screenshot(self, filename) -> bool:
-        _log.debug("save screenshot: '%s'", filename)
+        _log.debug("driver: save screenshot - '%s'", filename)
         success = self.wrapped_driver.save_screenshot(filename)
         if success:
-            _log.debug("screenshot saved successfully!")
+            _log.debug("driver: screenshot saved successfully!")
         else:
-            _log.warning("failed to save screenshot!")
+            _log.warning("driver: failed to save screenshot!")
         return success
 
     def save_page_source(self, filename) -> bool:
-        _log.debug("save page source: '%s'", filename)
+        _log.debug("driver: save page source - '%s'", filename)
         try:
             with open(filename, mode="xb") as out:
                 out.write(self.page_soup.prettify(encoding="utf-8"))
-            _log.debug("page source saved successfully!")
+            _log.debug("driver: page source saved successfully!")
             return True
         except IOError:
-            _log.warning("failed to save page source!")
+            _log.warning("driver: failed to save page source!")
             return False
 
     def set_window_size(self, width, height, windowHandle='current'):
-        _log.debug("browser: set window size (width=%s, height=%s, windowHandle='%s')", width, height, windowHandle)
+        _log.debug("driver: set window size (width=%s, height=%s, windowHandle='%s')", width, height, windowHandle)
         self.wrapped_driver.set_window_size(width, height, windowHandle)
 
     def get_window_size(self, windowHandle='current'):
         size = self.wrapped_driver.get_window_size(windowHandle)
-        _log.debug("browser: got window size for '%s' %s", windowHandle, size)
+        _log.debug("driver: got window size for '%s' %s", windowHandle, size)
         return size
 
     def set_window_position(self, x, y, windowHandle='current'):
-        _log.debug("browser: set window position (x=%s, y=%s, windowHandle='%s')", x, y, windowHandle)
+        _log.debug("driver: set window position (x=%s, y=%s, windowHandle='%s')", x, y, windowHandle)
         self.wrapped_driver.set_window_position(x, y, windowHandle)
 
     def get_window_position(self, windowHandle='current'):
         position = self.wrapped_driver.get_window_position(windowHandle)
-        _log.debug("browser: got window position for '%s' %s", windowHandle, position)
+        _log.debug("driver: got window position for '%s' %s", windowHandle, position)
         return position
 
     def get_window_rect(self):
         rect = self.wrapped_driver.get_window_rect()
-        _log.debug("browser: got window rect %s", rect)
+        _log.debug("driver: got window rect %s", rect)
         return rect
 
     def is_visible(self, locator, timeout=0.5) -> bool:
@@ -479,10 +479,10 @@ class DriverWrapper(WebDriver):
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("driver: hover %s timeout=%s", locator, timeout)
         element = self.wait_for_visible_element(locator, timeout)
-        element.hover()
+        self.actions.move_to_element(element).pause(2).perform()
 
     def set_window_rect(self, x=None, y=None, width=None, height=None):
-        _log.debug("browser: set window rect (x=%s, y=%s, width=%s, height=%s)", x, y, width, height)
+        _log.debug("driver: set window rect (x=%s, y=%s, width=%s, height=%s)", x, y, width, height)
         self.wrapped_driver.set_window_rect(x, y, width, height)
 
     def wait(self, timeout=None, *, poll_frequency=None, ignored_exceptions=None) -> WebDriverWait:
@@ -502,9 +502,19 @@ class DriverWrapper(WebDriver):
         return self.wait(timeout).until(EC.number_of_windows_to_be(expected_number))
 
     def wait_for_url_change(self, url_before_change: str, timeout=None):
-        _log.debug("wait for: URL change (url_before_change='%s')", url_before_change)
+        _log.debug("wait for: URL change url_before_change='%s'", url_before_change)
         timeout = defaults.URL_WAIT_TIMEOUT if timeout is None else timeout
         return self.wait(timeout).until(EC.url_changes(url_before_change))
+
+    def wait_for_url_contains(self, part: str, timeout=None):
+        _log.debug("wait for: URL contains part='%s'", part)
+        timeout = defaults.URL_WAIT_TIMEOUT if timeout is None else timeout
+        return self.wait(timeout).until(EC.url_contains(part))
+
+    def wait_for_url_matches(self, pattern: str, timeout=None):
+        _log.debug("wait for: URL matches pattern='%s'", pattern)
+        timeout = defaults.URL_WAIT_TIMEOUT if timeout is None else timeout
+        return self.wait(timeout).until(EC.url_matches(pattern))
 
     def wait_for_page_load(self):
         _wait_for_page_load(self.wrapped_driver)
@@ -514,30 +524,30 @@ class DriverWrapper(WebDriver):
         _log.debug("wait for alert: timeout=%s", timeout)
         return self.wait(timeout).until(EC.alert_is_present())
 
-    def wait_for_element(self, locator, timeout=None) -> ElementWrapper:
+    def wait_for_element(self, locator, timeout=None) -> WebElement:
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for element: locator=%s, timeout=%s", locator, timeout)
-        return ElementWrapper(self.wait(timeout).until(EC.presence_of_element_located(locator)))
+        return self.wait(timeout).until(EC.presence_of_element_located(locator))
 
-    def wait_for_visible_element(self, locator, timeout=None) -> ElementWrapper:
+    def wait_for_visible_element(self, locator, timeout=None) -> WebElement:
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for visible element: locator=%s, timeout=%s", locator, timeout)
-        return ElementWrapper(self.wait(timeout).until(EC.visibility_of_element_located(locator)))
+        return self.wait(timeout).until(EC.visibility_of_element_located(locator))
 
-    def wait_for_elements(self, locator, timeout=None) -> List[ElementWrapper]:
+    def wait_for_elements(self, locator, timeout=None) -> List[WebElement]:
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for elements: locator=%s, timeout=%s", locator, timeout)
-        return [ElementWrapper(el) for el in self.wait(timeout).until(EC.presence_of_all_elements_located(locator))]
+        return self.wait(timeout).until(EC.presence_of_all_elements_located(locator))
 
-    def wait_for_visible_elements(self, locator, timeout=None) -> List[ElementWrapper]:
+    def wait_for_visible_elements(self, locator, timeout=None) -> List[WebElement]:
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for visible elements: locator=%s, timeout=%s", locator, timeout)
-        return [ElementWrapper(el) for el in self.wait(timeout).until(EC.visibility_of_any_elements_located(locator))]
+        return self.wait(timeout).until(EC.visibility_of_any_elements_located(locator))
 
-    def wait_for_clickable_element(self, locator, timeout=None) -> ElementWrapper:
+    def wait_for_clickable_element(self, locator, timeout=None) -> WebElement:
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for clickable element: locator=%s, timeout=%s", locator, timeout)
-        return ElementWrapper(self.wait(timeout).until(EC.element_to_be_clickable(locator)))
+        return self.wait(timeout).until(EC.element_to_be_clickable(locator))
 
     def wait_for_invisibility_of_element(self, element, timeout=None):
         timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
@@ -559,56 +569,62 @@ class DriverWrapper(WebDriver):
         _log.debug("wait for text to be present in element: locator=%s, text='%s', timeout=%s", locator, text, timeout)
         return self.wait(timeout).until(EC.text_to_be_present_in_element(locator, text))
 
-    def find_element(self, by=By.ID, value=None) -> ElementWrapper:
-        return ElementWrapper(self.wrapped_driver.find_element(by=by, value=value))
+    def wait_for_text_to_be_present_in_element_value(self, locator, text, timeout=None):
+        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        _log.debug("wait for text to be present in element value: locator=%s, text='%s', timeout=%s",
+                   locator, text, timeout)
+        return self.wait(timeout).until(EC.text_to_be_present_in_element_value(locator, text))
 
-    def find_element_by_class_name(self, name):
-        return ElementWrapper(self.wrapped_driver.find_element_by_class_name(name))
+    def find_element(self, by=By.ID, value=None) -> WebElement:
+        return self.wrapped_driver.find_element(by=by, value=value)
 
-    def find_element_by_css_selector(self, css_selector):
-        return ElementWrapper(self.wrapped_driver.find_element_by_css_selector(css_selector))
+    def find_element_by_class_name(self, name) -> WebElement:
+        return self.wrapped_driver.find_element_by_class_name(name)
 
-    def find_element_by_id(self, id_):
-        return ElementWrapper(self.wrapped_driver.find_element_by_id(id_))
+    def find_element_by_css_selector(self, css_selector) -> WebElement:
+        return self.wrapped_driver.find_element_by_css_selector(css_selector)
 
-    def find_element_by_link_text(self, link_text):
-        return ElementWrapper(self.wrapped_driver.find_element_by_link_text(link_text))
+    def find_element_by_id(self, id_) -> WebElement:
+        return self.wrapped_driver.find_element_by_id(id_)
 
-    def find_element_by_name(self, name):
-        return ElementWrapper(self.wrapped_driver.find_element_by_name(name))
+    def find_element_by_link_text(self, link_text) -> WebElement:
+        return self.wrapped_driver.find_element_by_link_text(link_text)
 
-    def find_element_by_partial_link_text(self, link_text):
-        return ElementWrapper(self.wrapped_driver.find_element_by_partial_link_text(link_text))
+    def find_element_by_name(self, name) -> WebElement:
+        return self.wrapped_driver.find_element_by_name(name)
 
-    def find_element_by_tag_name(self, name):
-        return ElementWrapper(self.wrapped_driver.find_element_by_tag_name(name))
+    def find_element_by_partial_link_text(self, link_text) -> WebElement:
+        return self.wrapped_driver.find_element_by_partial_link_text(link_text)
 
-    def find_element_by_xpath(self, xpath):
-        return ElementWrapper(self.wrapped_driver.find_element_by_xpath(xpath))
+    def find_element_by_tag_name(self, name) -> WebElement:
+        return self.wrapped_driver.find_element_by_tag_name(name)
 
-    def find_elements(self, by=By.ID, value=None) -> List[ElementWrapper]:
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements(by=by, value=value)]
+    def find_element_by_xpath(self, xpath) -> WebElement:
+        return self.wrapped_driver.find_element_by_xpath(xpath)
 
-    def find_elements_by_class_name(self, name):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_class_name(name)]
+    def find_elements(self, by=By.ID, value=None) -> List[WebElement]:
+        return self.wrapped_driver.find_elements(by=by, value=value)
 
-    def find_elements_by_css_selector(self, css_selector):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_css_selector(css_selector)]
+    def find_elements_by_class_name(self, name) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_class_name(name)
 
-    def find_elements_by_id(self, id_):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_id(id_)]
+    def find_elements_by_css_selector(self, css_selector) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_css_selector(css_selector)
 
-    def find_elements_by_link_text(self, text):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_link_text(text)]
+    def find_elements_by_id(self, id_) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_id(id_)
 
-    def find_elements_by_name(self, name):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_name(name)]
+    def find_elements_by_link_text(self, text) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_link_text(text)
 
-    def find_elements_by_partial_link_text(self, link_text):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_partial_link_text(link_text)]
+    def find_elements_by_name(self, name) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_name(name)
 
-    def find_elements_by_tag_name(self, name):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_tag_name(name)]
+    def find_elements_by_partial_link_text(self, link_text) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_partial_link_text(link_text)
 
-    def find_elements_by_xpath(self, xpath):
-        return [ElementWrapper(e) for e in self.wrapped_driver.find_elements_by_xpath(xpath)]
+    def find_elements_by_tag_name(self, name) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_tag_name(name)
+
+    def find_elements_by_xpath(self, xpath) -> List[WebElement]:
+        return self.wrapped_driver.find_elements_by_xpath(xpath)
