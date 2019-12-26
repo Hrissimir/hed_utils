@@ -24,6 +24,12 @@ class ElementFinder(ElementWrapper):
     def __repr__(self):
         return f"ElementFinder(locator={repr(self.locator)}, context={repr(self.context)})"
 
+    def __iter__(self):
+        return self.elements.__iter__()
+
+    def __len__(self):
+        return len(self.elements)
+
     @property
     def wrapped_element(self) -> WebElement:
         return find_element(self.locator, self.context)
