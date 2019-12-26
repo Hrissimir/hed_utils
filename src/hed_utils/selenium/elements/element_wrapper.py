@@ -160,6 +160,7 @@ class ElementWrapper(WebElement):
                 start_idx = _style.index("display") + len("display")
                 end_idx = (_style.index(";", __start=start_idx) + 1) if (";" in _style) else len(_style) - 1
                 return _style[:start_idx] + _style[end_idx:]
+            return _style
 
         element = self.wrapped_element
         style = element.get_attribute("style")
