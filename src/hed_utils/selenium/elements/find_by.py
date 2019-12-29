@@ -2,7 +2,7 @@ import logging
 
 from selenium.webdriver.common.by import By
 
-from hed_utils.selenium.drivers.threadlocal_driver import ThreadLocalDriver
+from hed_utils.selenium.drivers.shared_driver import SharedDriver
 from hed_utils.selenium.elements.element_finder import ElementFinder
 from hed_utils.selenium.elements.locator import new_locator
 
@@ -13,7 +13,7 @@ _log.addHandler(logging.NullHandler())
 class FindBy:
     """Facade for creation of ElementFinder instances."""
 
-    driver = ThreadLocalDriver()
+    driver = SharedDriver()
 
     @classmethod
     def ID(cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:

@@ -6,7 +6,7 @@ from hed_utils.selenium.defaults import IGNORED_EXCEPTIONS as SELENIUM_EXCEPTION
 from hed_utils.selenium.drivers import chrome_driver
 from hed_utils.selenium.drivers import opera_driver
 from hed_utils.selenium.drivers.driver_wrapper import DriverWrapper
-from hed_utils.selenium.drivers.threadlocal_driver import ThreadLocalDriver
+from hed_utils.selenium.drivers.shared_driver import SharedDriver
 
 from hed_utils.selenium.elements.element_wrapper import ElementWrapper
 from hed_utils.selenium.elements.find_by import FindBy
@@ -21,7 +21,7 @@ __all__ = [
     "chrome_driver",
     "opera_driver",
     "DriverWrapper",
-    "ThreadLocalDriver",  # ThreadLocalDriver.set_instance(chrome_driver.create_instance())
+    "SharedDriver",  # SharedDriver.set_instance(chrome_driver.create_instance())
     "ElementWrapper",
     "FindBy",  # FindBy.NAME("q").send_keys("selenium")
 ]
