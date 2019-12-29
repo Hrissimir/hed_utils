@@ -15,7 +15,7 @@ def is_linux() -> bool:
 
 
 def is_mac() -> bool:
-    return platform.uname().system.lower() in ("darwin", "macosx")
+    return platform.uname().system.lower() in ("darwin", "macosx", "macos")
 
 
 def is_windows() -> bool:

@@ -6,49 +6,55 @@ from pstats import Stats
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
 
-_profile = None
 
+class Profiler:
+    def __init__(self):
+        _log.debug("initializing profiler...")
+        self._profile = cProfile.Profile()
+        self._is_enabled = False
 
-def init():
-    global _profile
-    _log.debug("initializing profiler...")
-    _profiler = cProfile.Profile()
+    @property
+    def is_enabled(self) -> bool:
+        return self._is_enabled
 
+    def enable(self):
+        _log.debug("enabling profiler...")
+        if self.is_enabled:
+            raise Exception("Already enabled!")
+        self._profile.enable()
+        self._is_enabled = True
 
-def enable():
-    global _profile
-    _log.debug("enabling profiler...")
-    _profile.enable()
+    def disable(self):
+        if not self.is_enabled:
+            raise Exception("Already disabled!")
+        self._profile.disable()
+        self._is_enabled = False
+        _log.debug("disabled profiler")
 
+    def __enter__(self):
+        self.enable()
+        return self
 
-def disable():
-    global _profile
-    _log.debug("disabling profiler...")
-    _profile.disable()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disable()
 
+    def get_stats(self, *, strip_dirs=True, sort_by="cumtime", top=50) -> str:
+        _log.debug(f"generating profiler stats report... (strip_dirs={strip_dirs}, sort_by='{sort_by}', top={top})")
+        if self.is_enabled:
+            raise Exception("Can't create stats, because profiler is still enabled!")
 
-def get_stats(sort_by="cumtime", top=50):
-    global _profile
-    _log.debug("collecting profiler stats...")
-    buffer = StringIO()
-    stats = Stats(_profile, stream=buffer).strip_dirs().sort_stats(sort_by)
-    stats.print_stats(top)
-    return buffer.getvalue()
+        buffer = StringIO()
+        stats = Stats(self._profile, stream=buffer)
 
+        if strip_dirs:
+            stats = stats.strip_dirs()
 
-def get_callees() -> str:
-    global _profile
-    _log.debug("collecting profiler callees...")
-    buffer = StringIO()
-    stats = Stats(_profile, stream=buffer).strip_dirs()
-    stats.print_callees()
-    return buffer.getvalue()
+        if sort_by:
+            stats = stats.sort_stats(sort_by)
 
+        if top:
+            stats.print_stats(top)
+        else:
+            stats.print_stats()
 
-def get_callers() -> str:
-    global _profile
-    _log.debug("collecting profiler callers...")
-    buffer = StringIO()
-    stats = Stats(_profile, stream=buffer).strip_dirs()
-    stats.print_callers()
-    return buffer.getvalue()
+        return buffer.getvalue()
