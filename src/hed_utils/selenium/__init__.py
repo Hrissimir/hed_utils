@@ -12,7 +12,6 @@ from hed_utils.selenium.elements.element_wrapper import ElementWrapper
 from hed_utils.selenium.elements.find_by import FindBy
 
 
-
 # prepare live console with single import 'from hed_utils.selenium import *'
 __all__ = [
     "By",
