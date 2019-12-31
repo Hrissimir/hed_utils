@@ -1,5 +1,5 @@
 from hed_utils.support import config_tool
-from hed_utils.support import file_tool
+from hed_utils.support import file_utils
 from hed_utils.support import google_spreadsheet
 from hed_utils.support import log
 from hed_utils.support import obj
@@ -12,7 +12,7 @@ from hed_utils.support import web_tool
 
 __all__ = [
     "config_tool",
-    "file_tool",
+    "file_utils",
     "google_spreadsheet",
     "log",
     "obj",

@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 from selenium.webdriver import ChromeOptions, Opera
 
-from hed_utils.support import file_tool, os_type
+from hed_utils.support import file_utils, os_type
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
@@ -72,18 +72,18 @@ def create_snapshot(dst_zip):  # pragma: no cover
         _log.debug("quitting driver...")
         driver.quit()
 
-        file_tool.zip_dir(user_data_dir, dst_zip, skip_suffixes=[".log"], dry=False)
+        file_utils.zip_dir(user_data_dir, dst_zip, skip_suffixes=[".log"], dry=False)
 
 
 def use_snapshot(*, src_zip, headless=False, auto_quit=True) -> Opera:
     """Extracts a pre-created .zip snapshot of user-data-dir to a temp dir then creates a driver using it """
 
     src_zip = Path(src_zip)
-    dst_dir = Path(file_tool.prepare_tmp_location("opera_user_data_dir"))
-    file_tool.extract_zip(src_zip, dst_dir)
+    dst_dir = Path(file_utils.prepare_tmp_location("opera_user_data_dir"))
+    file_utils.extract_zip(src_zip, dst_dir)
 
     def clear_dir():
-        file_tool.delete_folder(dst_dir)
+        file_utils.delete_folder(dst_dir)
 
     atexit.register(clear_dir)
 

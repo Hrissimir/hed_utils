@@ -5,11 +5,6 @@ from hed_utils.support import text_tool
 
 class TestTextTool(TestCase):
 
-    def test_bytes2human(self):
-        self.assertEqual(text_tool.bytes2human(10000), "9.8K")
-        self.assertEqual(text_tool.bytes2human(100001221), "95.4M")
-        self.assertEqual(text_tool.bytes2human(2), "2B")
-
     def test_get_indices_single_letter(self):
         text = "123aa2a2322abb"
         self.assertListEqual(text_tool.get_indices(text, "1"), [0])
