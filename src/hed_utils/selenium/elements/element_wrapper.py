@@ -1,3 +1,4 @@
+import hashlib
 from collections import namedtuple
 from typing import List, Dict
 
@@ -21,24 +22,32 @@ class ElementWrapper(WebElement):
     def __eq__(self, element):
         return hasattr(element, 'id') and self.id == element.id
 
-    def __ne__(self, element):
-        return not self.__eq__(element)
+    def __hash__(self):
+        return int(hashlib.md5(self.id.encode('utf-8')).hexdigest(), 16)
 
     def __repr__(self):
         element = self.wrapped_element
         return f"{type(self).__name__}(element={repr(element)})"
 
     @property
-    def wrapped_element(self) -> WebElement:
-        return self._wrapped_element
+    def _parent(self):
+        return self.wrapped_element._parent
+
+    @property
+    def _id(self):
+        return self.wrapped_element._id
 
     @property
     def _w3c(self):
         return self.wrapped_element._w3c
 
     @property
+    def wrapped_element(self) -> WebElement:
+        return self._wrapped_element
+
+    @property
     def id(self):
-        return self.wrapped_element._id
+        return self.wrapped_element.id
 
     @property
     def location_once_scrolled_into_view(self):
