@@ -17,7 +17,6 @@ def get_options(*, headless=False, user_data_dir=None, downloads_dir=None) -> Ch
     opts.add_argument("--disable-infobars")
     opts.add_argument("--disable-audio-output")
     opts.add_argument("--start-maximized")
-    opts.add_argument("--test-type=UI")
     opts.add_argument("--window-size=1920,1080")
 
     if headless:
@@ -36,12 +35,18 @@ def get_options(*, headless=False, user_data_dir=None, downloads_dir=None) -> Ch
     return opts
 
 
-def create_instance(*, headless=False, auto_quit=True, user_data_dir=None, downloads_dir=None) -> Chrome:
+def create_instance(*,
+                    headless=False,
+                    auto_quit=True,
+                    user_data_dir=None,
+                    downloads_dir=None,
+                    executable_path="chromedriver") -> Chrome:
     _log.debug("creating webdriver: Chrome(headless=%s, auto_quit=%s, user_data_dir='%s', downloads_dir='%s')",
                headless, auto_quit, user_data_dir, downloads_dir)
 
     options = get_options(headless=headless, user_data_dir=user_data_dir, downloads_dir=downloads_dir)
-    driver = Chrome(options=options)
+
+    driver = Chrome(executable_path=executable_path, options=options)
     _log.debug("created webdriver instance: Chrome")
 
     if auto_quit:
