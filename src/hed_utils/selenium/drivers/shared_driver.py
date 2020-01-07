@@ -3,7 +3,7 @@ from typing import Optional
 
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from hed_utils.selenium.drivers.driver_wrapper import DriverWrapper
+from hed_utils.selenium.wrappers.driver_wrapper import DriverWrapper
 from hed_utils.support.singleton import Singleton
 
 _log = logging.getLogger(__name__)
