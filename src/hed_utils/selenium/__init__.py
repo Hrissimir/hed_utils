@@ -8,7 +8,7 @@ from hed_utils.selenium.utils.shared_driver import SharedDriver
 from hed_utils.selenium.factories import chrome_driver, opera_driver
 
 from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
-from hed_utils.selenium.elements.find_by import FindBy
+from hed_utils.selenium.utils.find_by import FindBy
 
 
 # prepare live console with single import 'from hed_utils.selenium import *'
