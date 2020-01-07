@@ -5,7 +5,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 
-from hed_utils.selenium.elements.element_wrapper import ElementWrapper
+from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
 from hed_utils.selenium.elements.locator import Locator, find_element, find_elements
 from hed_utils.support.time_tool import poll_for_result
 

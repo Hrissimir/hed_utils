@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 
-from hed_utils.selenium.elements.element_wrapper import ElementWrapper
+from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
 
 
 @ddt
