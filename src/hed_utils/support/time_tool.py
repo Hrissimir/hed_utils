@@ -15,8 +15,17 @@ def parse_numeric_timestamp(value: Union[int, float, str], target_fmt="%Y-%m-%d 
     Arguments:
         value(float,str):   The numeric stamp value. Can be int,float,str and it's converted to float later
         target_fmt(str):    The desired result format.
+
     Returns:
         obj(str):           The timestamp converted to date-time string accordingly.
+
+    Examples:
+
+        >>> parse_numeric_timestamp(1578368965.96438)
+        '2020-01-07 05:49:25'
+
+        >>> parse_numeric_timestamp(1578368965)
+        '2020-01-07 05:49:25'
     """
 
     if not isinstance(value, (int, float, str)):
