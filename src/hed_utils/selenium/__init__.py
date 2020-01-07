@@ -1,15 +1,10 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-from hed_utils.selenium.constants import IGNORED_EXCEPTIONS as SELENIUM_EXCEPTIONS
-
-from hed_utils.selenium.wrappers.driver_wrapper import DriverWrapper
-from hed_utils.selenium.utils.shared_driver import SharedDriver
+from hed_utils.selenium.constants import SELENIUM_EXCEPTIONS
 from hed_utils.selenium.factories import chrome_driver, opera_driver
-
-from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
-from hed_utils.selenium.utils.find_by import FindBy
-
+from hed_utils.selenium.utils import FindBy, SharedDriver, wait_for_page_load
+from hed_utils.selenium.wrappers import DriverWrapper, ElementWrapper
 
 # prepare live console with single import 'from hed_utils.selenium import *'
 __all__ = [
@@ -18,8 +13,9 @@ __all__ = [
     "SELENIUM_EXCEPTIONS",  # try: ... except SELENIUM_EXCEPTIONS:...
     "chrome_driver",
     "opera_driver",
+    "wait_for_page_load",
     "DriverWrapper",
-    "SharedDriver",  # SharedDriver.set_instance(chrome_driver.create_instance())
     "ElementWrapper",
+    "SharedDriver",  # SharedDriver.set_instance(chrome_driver.create_instance())
     "FindBy",  # FindBy.NAME("q").send_keys("selenium")
 ]
