@@ -1,4 +1,5 @@
 import inspect
+import logging
 
 from selenium.common import exceptions
 
@@ -19,3 +20,8 @@ ALERT_WAIT_TIMEOUT = 5.000
 URL_WAIT_TIMEOUT = 10.000
 
 WINDOW_WAIT_TIMEOUT = 5.00
+
+LOGGERS = [
+    logging.getLogger("selenium.webdriver.remote.remote_connection"),
+    logging.getLogger("urllib3.connectionpool")
+]

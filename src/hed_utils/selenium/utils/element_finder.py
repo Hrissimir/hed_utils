@@ -23,7 +23,7 @@ class LocatorWrapper:
         self.desc = "N/A" if desc is None else desc
 
     def __repr__(self):
-        return ("LocatorWrapper(by='%s', value='%s', timeout=%d, visible_only=%s, required=%s, desc='%s')" %
+        return ("(by='%s', value='%s', timeout=%d, visible_only=%s, required=%s, desc='%s')" %
                 (self.by, self.value, self.timeout, self.visible_only, self.required, self.desc))
 
     def copy(self, timeout=None, visible_only=None, required=None, desc=None):
@@ -35,12 +35,12 @@ class LocatorWrapper:
                               desc=(self.desc if desc is None else desc))
 
 
-def _find_elements(locator: LocatorWrapper, context: Union[WebDriver, WebElement]) -> List[WebElement]:
+def _find_elements(locator: LocatorWrapper, context: Union[WebDriver, WebElement]) -> List[ElementWrapper]:
     try:
-        return [element
-                for element
+        return [ElementWrapper(el)
+                for el
                 in context.find_elements(locator.by, locator.value)
-                if (element.is_displayed() if locator.visible_only else True)]
+                if (el.is_displayed() if locator.visible_only else True)]
     except constants.IGNORED_EXCEPTIONS:
         return []
 
@@ -66,7 +66,7 @@ def find_element(locator: LocatorWrapper, context: Union[WebDriver, WebElement])
     return element
 
 
-def find_elements(locator: LocatorWrapper, context: Union[WebDriver, WebElement]) -> List[WebElement]:
+def find_elements(locator: LocatorWrapper, context: Union[WebDriver, WebElement]) -> List[ElementWrapper]:
     with Timer() as timer:
         while True:
             elements = _find_elements(locator, context)
@@ -104,11 +104,11 @@ class ElementFinder(ElementWrapper):
         return len(self.elements)
 
     @property
-    def wrapped_element(self) -> WebElement:
+    def wrapped_element(self) -> ElementWrapper:
         return find_element(self.locator, self.context)
 
     @property
-    def elements(self) -> List[WebElement]:
+    def elements(self) -> List[ElementWrapper]:
         return find_elements(self.locator, self.context)
 
     def is_visible(self, timeout=0.5) -> bool:
