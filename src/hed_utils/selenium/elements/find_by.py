@@ -1,71 +1,51 @@
-import logging
-
 from selenium.webdriver.common.by import By
 
 from hed_utils.selenium.drivers.shared_driver import SharedDriver
 from hed_utils.selenium.elements.element_finder import ElementFinder
 from hed_utils.selenium.elements.locator import new_locator
 
-_log = logging.getLogger(__name__)
-_log.addHandler(logging.NullHandler())
-
 
 class FindBy:
     """Facade for creation of ElementFinder instances."""
 
-    driver = SharedDriver()
+    @staticmethod
+    def ID(value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.ID, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
-    def ID(cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.ID, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+    @staticmethod
+    def NAME(value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.NAME, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
-    def NAME(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.NAME, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
-
-    @classmethod
+    @staticmethod
     def CSS_SELECTOR(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.CSS_SELECTOR, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+            value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.CSS_SELECTOR, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
-    def XPATH(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.XPATH, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+    @staticmethod
+    def XPATH(value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.XPATH, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
-    def TAG_NAME(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.TAG_NAME, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+    @staticmethod
+    def TAG_NAME(value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.TAG_NAME, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
-    def CLASS_NAME(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.CLASS_NAME, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+    @staticmethod
+    def CLASS_NAME(value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.CLASS_NAME, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
-    def LINK_TEXT(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.LINK_TEXT, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+    @staticmethod
+    def LINK_TEXT(value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.LINK_TEXT, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
 
-    @classmethod
+    @staticmethod
     def PARTIAL_LINK_TEXT(
-            cls, value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
-        locator = new_locator(By.PARTIAL_LINK_TEXT, value, timeout, visible_only, required, desc)
-        context = context or cls.driver
-        return ElementFinder(locator, context)
+            value, *, timeout=None, visible_only=None, required=None, desc=None, context=None) -> ElementFinder:
+        return ElementFinder(locator=new_locator(By.PARTIAL_LINK_TEXT, value, timeout, visible_only, required, desc),
+                             context=context or SharedDriver.get_instance())
