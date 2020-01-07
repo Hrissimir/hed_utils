@@ -1,6 +1,6 @@
 from selenium.webdriver.common.by import By
 
-from hed_utils.selenium.drivers.shared_driver import SharedDriver
+from hed_utils.selenium.utils.shared_driver import SharedDriver
 from hed_utils.selenium.elements.element_finder import ElementFinder
 from hed_utils.selenium.elements.locator import new_locator
 

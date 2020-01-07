@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hed_utils.selenium.drivers.shared_driver import SharedDriver
+from hed_utils.selenium.utils.shared_driver import SharedDriver
 
 
 class SharedDriverTest(TestCase):

@@ -4,7 +4,7 @@ from selenium.webdriver.common.keys import Keys
 from hed_utils.selenium.defaults import IGNORED_EXCEPTIONS as SELENIUM_EXCEPTIONS
 
 from hed_utils.selenium.wrappers.driver_wrapper import DriverWrapper
-from hed_utils.selenium.drivers.shared_driver import SharedDriver
+from hed_utils.selenium.utils.shared_driver import SharedDriver
 from hed_utils.selenium.factories import chrome_driver, opera_driver
 
 from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
