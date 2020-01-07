@@ -14,7 +14,6 @@ def get_options(*, headless=False, user_data_dir=None, downloads_dir=None) -> Ch
     opts = ChromeOptions()
 
     opts.add_argument("--disable-notifications")
-    opts.add_argument("--disable-infobars")
     opts.add_argument("--disable-audio-output")
     opts.add_argument("--start-maximized")
     opts.add_argument("--window-size=1920,1080")
@@ -23,13 +22,24 @@ def get_options(*, headless=False, user_data_dir=None, downloads_dir=None) -> Ch
         opts.add_argument("--headless")
 
     if user_data_dir:
-        Path(user_data_dir).mkdir(parents=True, exist_ok=True)
-        opts.add_argument(f"user-data-dir={str(user_data_dir)}")
+        user_data_dir_path = Path(user_data_dir).absolute()
+        if user_data_dir_path.exists():  # pragma: no cover
+            _log.debug("Using existing user-data-dir at: %s", str(user_data_dir_path))
+        else:
+            _log.debug("Creating user-data-dir at: %s", str(user_data_dir_path))
+            user_data_dir_path.mkdir(parents=True, exist_ok=True)
+        opts.add_argument(f"user-data-dir={str(user_data_dir_path)}")
 
     if downloads_dir:
-        Path(downloads_dir).mkdir(parents=True, exist_ok=True)
+        downloads_dir_path = Path(downloads_dir)
+        if downloads_dir_path.exists():  # pragma: no cover
+            _log.debug("Using existing downloads-dir at: %s", str(downloads_dir_path))
+        else:
+            _log.debug("Creating downloads-dir at: %s", str(downloads_dir_path))
+            downloads_dir_path.mkdir(parents=True, exist_ok=True)
+
         prefs = {"profile.default_content_settings.popups": 0,
-                 "download.default_directory": downloads_dir}
+                 "download.default_directory": str(downloads_dir_path)}
         opts.add_experimental_option("prefs", prefs)
 
     return opts
@@ -41,6 +51,8 @@ def create_instance(*,
                     user_data_dir=None,
                     downloads_dir=None,
                     executable_path="chromedriver") -> Chrome:
+    """Creates a Chrome webdriver instance, whose .quit() method will be automatically called at program exit."""
+
     _log.debug("creating webdriver: Chrome(headless=%s, auto_quit=%s, user_data_dir='%s', downloads_dir='%s')",
                headless, auto_quit, user_data_dir, downloads_dir)
 
