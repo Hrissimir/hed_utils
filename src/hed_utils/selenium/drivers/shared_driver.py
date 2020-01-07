@@ -17,7 +17,7 @@ class SharedDriver(DriverWrapper, metaclass=Singleton):
 
     @classmethod
     def set_driver(cls, driver: Optional[WebDriver]):
-        _log.debug("setting thread-local driver instance to: %s", repr(driver))
+        _log.debug("setting shared driver instance to: %s", repr(driver))
         cls()._wrapped_driver = driver
 
     @classmethod
