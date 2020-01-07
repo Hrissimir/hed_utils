@@ -8,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 
+import hed_utils.selenium.utils.element_finder
 from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
 
 
@@ -236,7 +237,7 @@ class ElementWrapperTest(TestCase):
         by = object()
         locator = object()
         expected_element = object()
-        self.mock_element.find_element.return_value = expected_element
+        hed_utils.selenium.utils.element_finder.find_element.return_value = expected_element
 
         # assert discovered elements are returned as ElementWrapper instance
         actual_result = self.element_wrapper.find_element(by, locator)
@@ -245,7 +246,7 @@ class ElementWrapperTest(TestCase):
 
         # assert the .find_element call is delegated to the wrapped element
         expected_calls = [call(by, locator)]
-        actual_calls = self.mock_element.find_element.mock_calls
+        actual_calls = hed_utils.selenium.utils.element_finder.find_element.mock_calls
         self.assertListEqual(expected_calls, actual_calls)
 
     def test_find_elements(self):
@@ -254,7 +255,7 @@ class ElementWrapperTest(TestCase):
         expected_element_1 = object()
         expected_element_2 = object()
         expected_elements = [expected_element_1, expected_element_2]
-        self.mock_element.find_elements.return_value = expected_elements
+        hed_utils.selenium.utils.element_finder.find_elements.return_value = expected_elements
 
         # assert discovered elements are returned as ElementWrapper instances
         actual_result = self.element_wrapper.find_elements(by, locator)
@@ -264,7 +265,7 @@ class ElementWrapperTest(TestCase):
 
         # assert the .find_element call is delegated to the wrapped element
         expected_calls = [call(by, locator)]
-        actual_calls = self.mock_element.find_elements.mock_calls
+        actual_calls = hed_utils.selenium.utils.element_finder.find_elements.mock_calls
         self.assertListEqual(expected_calls, actual_calls)
 
     @data("find_element_by_class_name",
