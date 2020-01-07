@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-from hed_utils.selenium.defaults import IGNORED_EXCEPTIONS as SELENIUM_EXCEPTIONS
+from hed_utils.selenium.constants import IGNORED_EXCEPTIONS as SELENIUM_EXCEPTIONS
 
 from hed_utils.selenium.wrappers.driver_wrapper import DriverWrapper
 from hed_utils.selenium.utils.shared_driver import SharedDriver

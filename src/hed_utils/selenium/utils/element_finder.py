@@ -5,7 +5,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 
-from hed_utils.selenium import defaults
+from hed_utils.selenium import constants
 from hed_utils.selenium.wrappers.element_wrapper import ElementWrapper
 from hed_utils.support.time_tool import poll_for_result, Timer
 
@@ -17,7 +17,7 @@ class LocatorWrapper:
     def __init__(self, by, value, timeout=None, visible_only=None, required=None, desc=None):
         self.by = by
         self.value = value
-        self.timeout = float(defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout)
+        self.timeout = float(constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout)
         self.visible_only = True if visible_only is None else visible_only
         self.required = True if required is None else required
         self.desc = "N/A" if desc is None else desc
@@ -41,7 +41,7 @@ def _find_elements(locator: LocatorWrapper, context: Union[WebDriver, WebElement
                 for element
                 in context.find_elements(locator.by, locator.value)
                 if (element.is_displayed() if locator.visible_only else True)]
-    except defaults.IGNORED_EXCEPTIONS:
+    except constants.IGNORED_EXCEPTIONS:
         return []
 
 

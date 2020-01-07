@@ -4,7 +4,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.wait import WebDriverWait
 
-from hed_utils.selenium import defaults
+from hed_utils.selenium import constants
 from hed_utils.support.time_tool import Timer
 
 _log = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ def wait_for_page_load(driver: WebDriver):
     def wait_for_condition(script, timeout, on_success, on_fail, confirmations_needed):
         condition = JsCondition(script, confirmations_needed)
         try:
-            WebDriverWait(driver, timeout, poll_frequency=defaults.POLL_FREQUENCY).until(condition)
+            WebDriverWait(driver, timeout, poll_frequency=constants.POLL_FREQUENCY).until(condition)
             return on_success
         except TimeoutException:
             return on_fail

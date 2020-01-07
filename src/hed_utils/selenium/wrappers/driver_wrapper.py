@@ -16,7 +16,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from hed_utils.selenium import defaults
+from hed_utils.selenium import constants
 from hed_utils.selenium.utils import js_condition
 from hed_utils.support import os_type
 
@@ -347,7 +347,7 @@ class DriverWrapper(WebDriver):
             return False
 
     def click(self, locator, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("driver: click %s timeout=%s", locator, timeout)
 
         try:
@@ -358,7 +358,7 @@ class DriverWrapper(WebDriver):
         element.click()
 
     def hover(self, locator, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("driver: hover %s timeout=%s", locator, timeout)
         element = self.wait_for_visible_element(locator, timeout)
         self.actions.move_to_element(element).pause(2).perform()
@@ -368,91 +368,91 @@ class DriverWrapper(WebDriver):
         self.wrapped_driver.set_window_rect(x, y, width, height)
 
     def wait(self, timeout=None, *, poll_frequency=None, ignored_exceptions=None) -> WebDriverWait:
-        timeout = defaults.DEFAULT_WAIT_TIMEOUT if timeout is None else timeout
-        poll_frequency = defaults.POLL_FREQUENCY if poll_frequency is None else poll_frequency
-        ignored_exceptions = defaults.IGNORED_EXCEPTIONS if ignored_exceptions is None else ignored_exceptions
+        timeout = constants.DEFAULT_WAIT_TIMEOUT if timeout is None else timeout
+        poll_frequency = constants.POLL_FREQUENCY if poll_frequency is None else poll_frequency
+        ignored_exceptions = constants.IGNORED_EXCEPTIONS if ignored_exceptions is None else ignored_exceptions
         return WebDriverWait(self.wrapped_driver, timeout, poll_frequency, ignored_exceptions)
 
     def wait_for_new_window(self, current_handles, timeout=None):
         _log.debug("wait for: new window (current_handles=%s)", current_handles)
-        timeout = defaults.WINDOW_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.WINDOW_WAIT_TIMEOUT if timeout is None else timeout
         return self.wait(timeout).until(EC.new_window_is_opened(current_handles))
 
     def wait_for_number_of_windows_to_be(self, expected_number, timeout=None):
-        timeout = defaults.WINDOW_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.WINDOW_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for: number of windows to be '%s' timeout=%s", expected_number, timeout)
         return self.wait(timeout).until(EC.number_of_windows_to_be(expected_number))
 
     def wait_for_url_change(self, url_before_change: str, timeout=None):
         _log.debug("wait for: URL change url_before_change='%s'", url_before_change)
-        timeout = defaults.URL_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.URL_WAIT_TIMEOUT if timeout is None else timeout
         return self.wait(timeout).until(EC.url_changes(url_before_change))
 
     def wait_for_url_contains(self, part: str, timeout=None):
         _log.debug("wait for: URL contains part='%s'", part)
-        timeout = defaults.URL_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.URL_WAIT_TIMEOUT if timeout is None else timeout
         return self.wait(timeout).until(EC.url_contains(part))
 
     def wait_for_url_matches(self, pattern: str, timeout=None):
         _log.debug("wait for: URL matches pattern='%s'", pattern)
-        timeout = defaults.URL_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.URL_WAIT_TIMEOUT if timeout is None else timeout
         return self.wait(timeout).until(EC.url_matches(pattern))
 
     def wait_for_page_load(self):
         js_condition.wait_for_page_load(self.wrapped_driver)
 
     def wait_for_alert(self, timeout=None) -> Alert:
-        timeout = defaults.ALERT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ALERT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for alert: timeout=%s", timeout)
         return self.wait(timeout).until(EC.alert_is_present())
 
     def wait_for_element(self, locator, timeout=None) -> WebElement:
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for element: locator=%s, timeout=%s", locator, timeout)
         return self.wait(timeout).until(EC.presence_of_element_located(locator))
 
     def wait_for_visible_element(self, locator, timeout=None) -> WebElement:
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for visible element: locator=%s, timeout=%s", locator, timeout)
         return self.wait(timeout).until(EC.visibility_of_element_located(locator))
 
     def wait_for_elements(self, locator, timeout=None) -> List[WebElement]:
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for elements: locator=%s, timeout=%s", locator, timeout)
         return self.wait(timeout).until(EC.presence_of_all_elements_located(locator))
 
     def wait_for_visible_elements(self, locator, timeout=None) -> List[WebElement]:
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for visible elements: locator=%s, timeout=%s", locator, timeout)
         return self.wait(timeout).until(EC.visibility_of_any_elements_located(locator))
 
     def wait_for_clickable_element(self, locator, timeout=None) -> WebElement:
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for clickable element: locator=%s, timeout=%s", locator, timeout)
         return self.wait(timeout).until(EC.element_to_be_clickable(locator))
 
     def wait_for_invisibility_of_element(self, element, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for invisibility of element: timeout=%s", timeout)
         return self.wait(timeout).until(EC.invisibility_of_element(element))
 
     def wait_for_invisibility_of_element_located(self, locator, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for invisibility of element located: %s timeout=%s", locator, timeout)
         return self.wait(timeout).until(EC.invisibility_of_element_located(locator))
 
     def wait_for_staleness_of(self, element, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for staleness of element: timeout=%s", timeout)
         return self.wait(timeout).until(EC.staleness_of(element))
 
     def wait_for_text_to_be_present_in_element(self, locator, text, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for text to be present in element: locator=%s, text='%s', timeout=%s", locator, text, timeout)
         return self.wait(timeout).until(EC.text_to_be_present_in_element(locator, text))
 
     def wait_for_text_to_be_present_in_element_value(self, locator, text, timeout=None):
-        timeout = defaults.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
+        timeout = constants.ELEMENT_WAIT_TIMEOUT if timeout is None else timeout
         _log.debug("wait for text to be present in element value: locator=%s, text='%s', timeout=%s",
                    locator, text, timeout)
         return self.wait(timeout).until(EC.text_to_be_present_in_element_value(locator, text))
