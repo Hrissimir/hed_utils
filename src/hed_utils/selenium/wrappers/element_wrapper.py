@@ -29,6 +29,10 @@ class ElementWrapper(WebElement):
         element = self.wrapped_element
         return f"{type(self).__name__}(element={repr(element)})"
 
+    def __getitem__(self, name):
+        element = self.wrapped_element
+        return element.get_attribute(name)
+
     @property
     def _parent(self):
         return self.wrapped_element._parent
