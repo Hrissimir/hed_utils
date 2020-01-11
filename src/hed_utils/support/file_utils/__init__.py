@@ -18,8 +18,6 @@ from hed_utils.support.file_utils.file_sys import (
 from hed_utils.support.file_utils.json_file import read_json, write_json
 from hed_utils.support.file_utils.xlsx_file import read_xlsx_as_dict, write_xlsx_from_dict
 from hed_utils.support.file_utils.zip_file import (
-    write_zipped_text,
-    read_zipped_text,
     extract_zip,
     zip_dir,
 )
@@ -43,8 +41,6 @@ __all__ = [
     "write_json",
     "write_xlsx_from_dict",
     "read_xlsx_as_dict",
-    "write_zipped_text",
-    "read_zipped_text",
     "extract_zip",
     "zip_dir"
 ]
