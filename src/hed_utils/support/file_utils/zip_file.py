@@ -4,51 +4,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile, ZipInfo
 
-import pyminizip
-
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
-
-
-def write_zipped_text(dst_zip: str, text: str, password: str, text_file_name="protected.txt"):
-    """Writes text to a .txt file and puts it in a password-protected zip.
-
-    Arguments:
-        dst_zip(str):           Path for the destination .zip file
-        text(str):              The text to be written.
-        password(str):          Password that will be used to lock the zip
-        text_file_name(str):    Name of the .txt file that will be holding the text inside the archive
-
-    """
-
-    dst_path = Path(dst_zip).absolute()
-    dst_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with TemporaryDirectory() as tmp_dir:
-        txt_file_path = Path(tmp_dir).joinpath(text_file_name)
-        txt_file_path.write_text(text)
-        file_prefix_in_zip = None
-        zip_path = str(dst_path)
-        pyminizip.compress(str(txt_file_path), file_prefix_in_zip, zip_path, password, 9)
-
-
-def read_zipped_text(src_zip: str, password: str, text_file_name="protected.txt") -> str:
-    """Reads text that was written to a .zip file using .write_zipped_text
-
-    Arguments:
-        src_zip(str):           Path to the .zip
-        password(str):          Password to be used for unlocking the zip
-        text_file_name(str):    The name of the file that holds the text inside the zip
-
-    Returns:
-        obj(str):               The text that was written.
-    """
-
-    src_path = Path(src_zip).absolute()
-    with ZipFile(str(src_path), "r") as archive:
-        archive.setpassword(bytes(password, "utf-8"))
-        with archive.open(text_file_name) as file:
-            return file.read().decode("utf-8")
 
 
 def extract_zip(src_zip, dst_dir, pwd=None):
