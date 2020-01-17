@@ -103,6 +103,15 @@ class ElementFinder(ElementWrapper):
     def __len__(self):
         return len(self.elements)
 
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            return super().__getitem__(item)
+        elif isinstance(item, int):
+            return self.elements[item]
+        else:
+            raise TypeError(
+                f"Unsupported [] operation for '{type(item).__name__}' instances! (Only str & int are supported!)")
+
     @property
     def wrapped_element(self) -> ElementWrapper:
         return find_element(self.locator, self.context)
