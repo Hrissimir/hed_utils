@@ -46,114 +46,58 @@ Target 'Spreadsheet' setup instructions:
             - pip install gspread oauth2client
 
         To discover more usage details just copy this file contents inside IDE and check what the autocomplete shows.
-
-    Example:
-
-        spreadsheet = google_spreadsheet.connect(spreadsheet_name="...", json_auth_file="...")
-        sheet1 = spreadsheet.get_worksheet(0)
-        print(sheet1.title)
-        print(sheet1.row_values(1))  # 1-based index
-        print(sheet1.get_all_records())  # returns a list of dicts representing the rows data (first row acts as keys)
-        values = [ ... , ... , ...]
-        sheet1.append_row(values)
 """
 
 import logging
-import random
-from pathlib import Path
-from pprint import pformat
-from typing import Optional, List
+from typing import List
 
-import gspread
+from gspread import authorize, Cell, Client, Spreadsheet, Worksheet
 from oauth2client.service_account import ServiceAccountCredentials
-
-from hed_utils.support.time_tool import busy_wait
-
-SCOPE = ["https://spreadsheets.google.com/feeds",
-         "https://www.googleapis.com/auth/drive"]
-
-PAUSES_AFTER_ROW_APPEND = [1, 1.1, 1.2, 1.3, 1.4]  # google says 100 requests per 100 seconds, so we wait a bit.
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
 
 
-def connect(spreadsheet_name: str, json_auth_file: str) -> gspread.models.Spreadsheet:
-    """Authenticates with Google and returns spreadsheet handle."""
-
-    _credentials = ServiceAccountCredentials.from_json_keyfile_name(json_auth_file, SCOPE)
-    _client = gspread.authorize(_credentials)
-    _spreadsheet = _client.open(spreadsheet_name)
-    return _spreadsheet
-
-
-def get_possible_connect_error(spreadsheet_name: str, json_auth_file: str) -> Optional[str]:
-    """Attempts to connect to the spreadsheet and returns None on success.
-
-    If any error occurred during the connection attempt, a proper message will be returned."""
-
-    auth_file_path = Path(json_auth_file)
-    if not auth_file_path.exists():
-        return f".json auth file not present at: '{auth_file_path}'"
-
-    try:
-        connect(spreadsheet_name, json_auth_file)
-    except Exception as connection_error:
-        return f"Could not open spreadsheet: '{spreadsheet_name}'! Reason: '{connection_error}'"
+def create_client_using_json(filepath) -> Client:
+    _log.debug("creating Client using JSON auth-file: '%s'", filepath)
+    return authorize(
+        ServiceAccountCredentials.from_json_keyfile_name(
+            filename=filepath,
+            scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        )
+    )
 
 
-def get_possible_append_row_error(*,
-                                  spreadsheet_name: str,
-                                  json_auth_file: str,
-                                  worksheet_index: int,
-                                  row_len: int) -> Optional[str]:
-    """ Connects to the spreadsheet and checks if the target worksheet contains enough columns to receive such row.
-
-    Will return any error message if present or None if such row can be appended seamlessly"""
-
-    auth_file_path = Path(json_auth_file)
-    if not auth_file_path.exists():
-        return f".json auth file not present at: '{auth_file_path}'"
-
-    try:
-        spreadsheet = connect(spreadsheet_name, json_auth_file)
-    except Exception as connection_error:
-        return f"Could not open spreadsheet: '{spreadsheet_name}'! Reason: '{connection_error}'"
-
-    try:
-        worksheet = spreadsheet.get_worksheet(worksheet_index)
-    except Exception as worksheet_error:
-        return f"Could not get worksheet with index: '{worksheet_index}'! Reason: '{worksheet_error}'"
-
-    columns_count = worksheet.col_count
-    if columns_count < row_len:
-        return f"Row with length: '{row_len}' won't fit in a worksheet with '{columns_count}' columns!"
-
-    return None
+def open_spreadsheet(title, json_filepath) -> Spreadsheet:
+    client = create_client_using_json(json_filepath)
+    _log.debug("opening Spreadsheet with title: '%s' ...", title)
+    return client.open(title)
 
 
-def append_rows_to_worksheet(rows: List[List[str]], worksheet: gspread.models.Worksheet):
-    """Helper func to slowly append rows because Google only allows 100 requests per 100 seconds when using for free"""
+def open_worksheet(*, spreadsheet_title, worksheet_title, json_filepath) -> Worksheet:
+    spreadsheet = open_spreadsheet(spreadsheet_title, json_filepath)
+    _log.debug("opening Worksheet with title: '%s'...", worksheet_title)
+    return spreadsheet.worksheet(worksheet_title)
 
-    _log.info("appending '%s' rows to worksheet: '%s'", len(rows), worksheet.title)
 
-    busy_wait(2)
+def convert_values_to_cells(values: List[list]) -> List[Cell]:
+    _log.debug("converting values to cells...")
+    return [Cell(row=row_idx, col=col_idx, value=value)
+            for row_idx, row in enumerate(values, start=1)
+            for col_idx, value in enumerate(row, start=1)]
 
-    failed_rows = []
 
-    for i, values in enumerate(rows, start=1):
+def set_worksheet_values(worksheet: Worksheet, values: List[list]):
+    _log.debug("clearing worksheet: %s ...", worksheet)
+    worksheet.clear()
+    cells = convert_values_to_cells(values)
+    _log.debug("updating worksheet values...")
+    worksheet.update_cells(cells)
+    _log.debug("worksheet values has been set!")
 
-        # wait a random bit to ensure usage time-quota will be met
-        pause = random.choice(PAUSES_AFTER_ROW_APPEND)
 
-        try:
-            _log.info("appending row ( %s / %s ) - %s", i, len(rows), values)
-            worksheet.append_row(values)
-            busy_wait(pause)
-        except:
-            _log.exception("error while appending row!")
-            failed_rows.append(values)
-            busy_wait(pause)
-
-    if failed_rows:
-        _log.error("failed to append the following rows:\n%s", pformat(failed_rows))
+def append_worksheet_values(worksheet: Worksheet, values: List[list]):
+    _log.debug("appending values to worksheet...")
+    resulting_values = worksheet.get_all_values()
+    resulting_values.extend(values)
+    set_worksheet_values(worksheet, resulting_values)
