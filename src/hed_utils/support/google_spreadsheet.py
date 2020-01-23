@@ -85,11 +85,11 @@ def open_worksheet(*, spreadsheet_title, worksheet_title, json_filepath) -> Work
         return spreadsheet.add_worksheet(worksheet_title, rows=100, cols=26)
 
 
-def convert_values_to_cells(values: List[list]) -> List[Cell]:
+def convert_values_to_cells(values: List[list], *, start_row=1, start_col=1) -> List[Cell]:
     _log.debug("converting values to cells...")
     return [Cell(row=row_idx, col=col_idx, value=value)
-            for row_idx, row in enumerate(values, start=1)
-            for col_idx, value in enumerate(row, start=1)]
+            for row_idx, row in enumerate(values, start=start_row)
+            for col_idx, value in enumerate(row, start=start_col)]
 
 
 def set_worksheet_values(worksheet: Worksheet, values: List[list]):
@@ -102,7 +102,7 @@ def set_worksheet_values(worksheet: Worksheet, values: List[list]):
 
 
 def append_worksheet_values(worksheet: Worksheet, values: List[list]):
-    _log.debug("appending values to worksheet...")
-    resulting_values = worksheet.get_all_values()
-    resulting_values.extend(values)
-    set_worksheet_values(worksheet, resulting_values)
+    _log.debug("appending %s rows values to worksheet...", len(values))
+
+    cells = convert_values_to_cells(values, start_row=len(worksheet.col_values(1)) + 1)
+    worksheet.update_cells(cells)
