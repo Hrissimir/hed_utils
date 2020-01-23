@@ -51,7 +51,7 @@ Target 'Spreadsheet' setup instructions:
 import logging
 from typing import List
 
-from gspread import authorize, Cell, Client, Spreadsheet, Worksheet
+from gspread import authorize, Cell, Client, Spreadsheet, Worksheet, SpreadsheetNotFound, WorksheetNotFound
 from oauth2client.service_account import ServiceAccountCredentials
 
 _log = logging.getLogger(__name__)
@@ -60,24 +60,29 @@ _log.addHandler(logging.NullHandler())
 
 def create_client_using_json(filepath) -> Client:
     _log.debug("creating Client using JSON auth-file: '%s'", filepath)
-    return authorize(
-        ServiceAccountCredentials.from_json_keyfile_name(
-            filename=filepath,
-            scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        )
-    )
+    return authorize(ServiceAccountCredentials.from_json_keyfile_name(filename=filepath,
+                                                                      scopes=["https://spreadsheets.google.com/feeds",
+                                                                              "https://www.googleapis.com/auth/drive"]))
 
 
 def open_spreadsheet(title, json_filepath) -> Spreadsheet:
     client = create_client_using_json(json_filepath)
-    _log.debug("opening Spreadsheet with title: '%s' ...", title)
-    return client.open(title)
+    try:
+        _log.debug("opening Spreadsheet with title: '%s' ...", title)
+        return client.open(title)
+    except SpreadsheetNotFound as err:
+        _log.exception("SpreadsheetNotFound: '%s'! %s", title, err)
+        raise ValueError("No such Spreadsheet!", title) from err
 
 
 def open_worksheet(*, spreadsheet_title, worksheet_title, json_filepath) -> Worksheet:
     spreadsheet = open_spreadsheet(spreadsheet_title, json_filepath)
-    _log.debug("opening Worksheet with title: '%s'...", worksheet_title)
-    return spreadsheet.worksheet(worksheet_title)
+    try:
+        _log.debug("opening Worksheet with title: '%s'...", worksheet_title)
+        return spreadsheet.worksheet(worksheet_title)
+    except WorksheetNotFound:
+        _log.warning("creating missing worksheet with title: '%s'", worksheet_title)
+        return spreadsheet.add_worksheet(worksheet_title, rows=100, cols=26)
 
 
 def convert_values_to_cells(values: List[list]) -> List[Cell]:
