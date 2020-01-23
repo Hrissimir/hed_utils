@@ -3,7 +3,7 @@ Changelog
 =========
 
 
-Version 4.1.1
+Version 4.1.2
 =============
 
 - Optimized appending values to worksheet in google_spreadsheet.py

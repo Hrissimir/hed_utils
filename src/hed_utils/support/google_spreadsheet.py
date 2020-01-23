@@ -105,4 +105,5 @@ def append_worksheet_values(worksheet: Worksheet, values: List[list]):
     _log.debug("appending %s rows values to worksheet...", len(values))
 
     cells = convert_values_to_cells(values, start_row=len(worksheet.col_values(1)) + 1)
+    worksheet.add_rows(len(values))
     worksheet.update_cells(cells)
