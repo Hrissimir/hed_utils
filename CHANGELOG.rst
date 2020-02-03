@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+Version 4.2.0
+=============
+
+- Changed 'rkill' CLI interface
+
+
 Version 4.1.2
 =============
 

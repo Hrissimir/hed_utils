@@ -7,17 +7,10 @@ from hed_utils.support import ps_tool
 def _parse_args(args):
     parser = argparse.ArgumentParser(description="Recursively kill matching processes and their children.")
 
-    parser.add_argument(dest="value", type=str, help="value to use with the matching strategy")
-
-    parser.add_argument("--kill",
-                        dest="kill",
-                        action="store",
-                        choices={"y", "n"}, default="n",
-                        help="should the kill be actually performed (default: n)")
-
-    parser.add_argument("--by", dest="by", action="store",
-                        choices={"pid", "name", "pattern"}, default="pattern",
-                        help="targets matching strategy (default: pattern)")
+    parser.add_argument("-pid", dest="pid", action="store", type=int, help="target process id")
+    parser.add_argument("-n", dest="name", action="store", help="target process name")
+    parser.add_argument("-p", dest="pattern", action="store", help="target process name pattern")
+    parser.add_argument("-y", dest="dry", action="store_const", const=False, default=True, help="confirm the kill")
 
     return parser.parse_args(args)
 
@@ -31,20 +24,21 @@ def main(args):
 
     args = _parse_args(args)
 
-    kill = args.kill
-    by = args.by
-    value = args.value
+    pid = args.pid
+    name = args.name
+    pattern = args.pattern
+    dry = args.dry
 
-    invocation_details = f"'rkill' called with args: kill='{kill}', by='{by}', value='{value}'"
-    print(invocation_details)
+    invocation_details = f"pid={pid}, name='{name}', pattern='{pattern}', dry={dry}"
+    print(f"rkill called: {invocation_details}")
 
-    funcs_map = {"pid": ps_tool.kill_process_by_pid,
-                 "name": ps_tool.kill_processes_by_name,
-                 "pattern": ps_tool.kill_processes_by_pattern}
-
-    kill_func = funcs_map[by]
-    dry = not (kill.lower() == "y")
-    victims = kill_func(value, dry=dry)
+    victims = []
+    if pid:
+        victims.extend(ps_tool.kill_process_by_pid(pid, dry=dry))
+    if name:
+        victims.extend(ps_tool.kill_processes_by_name(name, dry=dry))
+    if pattern:
+        victims.extend(ps_tool.kill_processes_by_pattern(pattern, dry=dry))
 
     if victims:
         print()
@@ -52,6 +46,8 @@ def main(args):
         print(f"\nTotal of [ {len(victims)} ] victims! ( {invocation_details} )")
     else:
         print("rkill: No matching processes!")
+
+    return
 
 
 def run():
