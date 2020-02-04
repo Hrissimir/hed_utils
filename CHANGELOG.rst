@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+Version 4.2.1
+=============
+
+- fix: accounting for psutil.AccessDenied in 'rkill'
+
+
 Version 4.2.0
 =============
 

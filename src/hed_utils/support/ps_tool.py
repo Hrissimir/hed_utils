@@ -83,10 +83,10 @@ def terminate_process(pid: int) -> bool:  # pragma: no cover
         target = psutil.Process(pid)
         target.terminate()
         target.wait(1)
+    except (psutil.TimeoutExpired, psutil.AccessDenied):
+        return False
     except psutil.NoSuchProcess:
         return True
-    except psutil.TimeoutExpired:
-        return False
     try:
         return not target.is_running()
     except psutil.Error:
@@ -96,14 +96,16 @@ def terminate_process(pid: int) -> bool:  # pragma: no cover
 def kill_process(pid: int) -> bool:  # pragma: no cover
     if terminate_process(pid):
         return True
+
     try:
         target = psutil.Process(pid)
         target.kill()
         target.wait(1)
+    except (psutil.TimeoutExpired, psutil.AccessDenied):
+        return False
     except psutil.NoSuchProcess:
         return True
-    except psutil.TimeoutExpired:
-        return False
+
     try:
         return not target.is_running()
     except psutil.Error:
