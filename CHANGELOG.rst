@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+Version 4.3.0
+=============
+
+- refactored file_sys.py (incl interface changes)
+
+
 Version 4.2.1
 =============
 

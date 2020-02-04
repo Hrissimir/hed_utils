@@ -1,10 +1,10 @@
 from hed_utils.support.file_utils.file_sys import (
-    Folder,
+    Contents,
     format_size,
-    get_stamp,
-    walk_folders,
-    iter_files,
-    iter_folders,
+    time_stamp,
+    walk_contents,
+    walk_files,
+    walk_dirs,
     delete_file,
     delete_folder,
     prepare_tmp_location,
@@ -23,12 +23,12 @@ from hed_utils.support.file_utils.zip_file import (
 )
 
 __all__ = [
-    "Folder",
+    "Contents",
     "format_size",
-    "get_stamp",
-    "walk_folders",
-    "iter_files",
-    "iter_folders",
+    "time_stamp",
+    "walk_contents",
+    "walk_files",
+    "walk_dirs",
     "delete_file",
     "delete_folder",
     "prepare_tmp_location",

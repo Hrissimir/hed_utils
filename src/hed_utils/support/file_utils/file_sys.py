@@ -1,4 +1,3 @@
-import errno
 import logging
 import shutil
 import tempfile
@@ -6,16 +5,15 @@ from collections import namedtuple
 from datetime import datetime
 from functools import partial
 from multiprocessing import Process
-from os import rmdir, walk
-from os.path import exists, join
+from os import walk
 from pathlib import Path
 from pprint import pformat
 from subprocess import call
-from typing import Union
+from typing import Generator, Union
 
 from hed_utils.support import os_type
 
-Folder = namedtuple("Folder", "dirpath dirnames filenames")
+Contents = namedtuple("Contents", "rootdir dirnames filenames")
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
@@ -40,39 +38,44 @@ def format_size(n: int):
     return "%sB" % n
 
 
-def get_stamp() -> str:
+def time_stamp() -> str:
     """Returns UTC timestamp string suited to use as filename prefix/suffix"""
 
     return datetime.utcnow().strftime('%Y-%m-%d_%H_%M_%S')
 
 
-def walk_folders(rootpath: Union[str, Path], followlinks=False):
+def walk_contents(rootpath: Union[str, Path], followlinks=False) -> Generator[Contents, None, None]:
     """Recursively walks the given rootpath in bottom-up order, yielding Folder named-tuples"""
 
-    root_path = Path(rootpath).absolute()
-    if not root_path.exists():
-        raise FileNotFoundError(str(root_path))
-    if not root_path.is_dir():
-        raise NotADirectoryError(str(root_path))
+    if not rootpath:
+        raise ValueError()
 
-    for dirpath, dirnames, filenames in walk(root_path, topdown=False, followlinks=followlinks):
-        yield Folder(dirpath, dirnames, filenames)
+    rootpath = Path(rootpath)
 
+    if not rootpath.exists():
+        raise FileNotFoundError(str(rootpath))
 
-def iter_files(rootpath: Union[str, Path]):
-    """Recursively iterates the given folder's contents, yielding only file-paths, in a bottom-up manner."""
+    if not rootpath.is_dir():
+        raise NotADirectoryError(str(rootpath))
 
-    for folder in walk_folders(rootpath):
-        for name in folder.filenames:
-            yield join(folder.dirpath, name)
+    for rootdir, dirnames, filenames in walk(rootpath, topdown=False, followlinks=followlinks):
+        yield Contents(rootdir, dirnames, filenames)
 
 
-def iter_folders(rootpath: Union[str, Path]):
-    """Recursively iterates the given folder's contents, yielding only folder-paths, in a bottom-up manner."""
+def walk_files(rootpath: Union[str, Path]) -> Generator[Path, None, None]:
+    """Recursively (bottom-up) walks the given folder's contents, yielding only file-paths."""
 
-    for folder in walk_folders(rootpath):
-        for name in folder.dirnames:
-            yield join(folder.dirpath, name)
+    for contents in walk_contents(rootpath):
+        for file in contents.filenames:
+            yield Path(contents.rootdir).joinpath(file)
+
+
+def walk_dirs(rootpath: Union[str, Path]) -> Generator[Path, None, None]:
+    """Recursively (bottom-up) walks the given folder's contents, yielding only folder-paths."""
+
+    for contents in walk_contents(rootpath):
+        for folder in contents.dirnames:
+            yield Path(contents.rootdir).joinpath(folder)
 
 
 def delete_file(filepath: Union[str, Path]) -> bool:
@@ -92,94 +95,87 @@ def delete_file(filepath: Union[str, Path]) -> bool:
     if not filepath:
         raise ValueError()
 
-    filepath = Path(filepath).absolute()
+    filepath = Path(filepath)
 
     if filepath.exists():
-        try:
-            if not filepath.is_file():
-                raise IsADirectoryError(str(filepath))
+        if filepath.is_file():
+            try:
+                filepath.unlink()
+            except FileNotFoundError:
+                pass
+        else:
+            raise IsADirectoryError(str(filepath))
 
-            filepath.unlink()
-        except FileNotFoundError:
-            pass
-
-    success = not filepath.exists()
-
-    if success:
-        _log.debug("deleted file at: '%s'", str(filepath))
-    else:
+    if filepath.exists():
         _log.warning("failed to delete file at: '%s'", str(filepath))
+        return False
+    else:
+        _log.debug("deleted file at: '%s'", str(filepath))
+        return True
 
-    return success
 
-
-def delete_folder(folder: Union[str, Path], *, inclusive=True) -> bool:
+def delete_folder(rootpath: Union[str, Path], *, inclusive=True) -> bool:
     """Deletes folder contents recursively, starting from the innermost items.
 
     Args:
-        folder:             Path to the target folder
+        rootpath:           Path to the target folder
         inclusive(bool):    If True will delete the folder itself after all of it's contents were deleted.
 
     Returns:
         obj(bool):          True if all targets were deleted, False otherwise.
     """
 
-    def delete_dir(dir_path) -> bool:  # helper func for deleting a single folder
-        try:
-            rmdir(dir_path)
-        except FileNotFoundError:
-            pass
-        except OSError as error:
-            if error.errno == errno.ENOTEMPTY:  # not empty
+    def delete_dir(dirpath: Path):
+        if dirpath.exists():
+            try:
+                dirpath.rmdir()
+            except FileNotFoundError:
                 pass
-            raise
 
-        success = not exists(dir_path)
-        if success:
-            _log.debug("deleted folder at: '%s'", str(dir_path))
-        else:
-            _log.warning("failed to delete folder at: '%s'", str(dir_path))
+            return not dirpath.exists()
 
-        return success
+    if not rootpath:
+        raise ValueError()
 
-    folder_path = Path(folder).absolute()
-    _log.debug("deleting folder (inclusive=%s): %s", inclusive, str(folder_path))
+    rootpath = Path(rootpath)
 
-    failed_deletions = []
+    failed_deletions = list()
 
-    # First delete all inner files
-    for filepath in iter_files(folder):
-        if not delete_file(filepath):
-            failed_deletions.append(("file", filepath))
+    # delete all files
+    failed_deletions.extend(file for file in walk_files(rootpath) if not delete_file(file))
 
-    # Then delete the supposedly empty folders folders
-    for dirpath in iter_folders(folder):
-        if not delete_dir(dirpath):
-            failed_deletions.append(("folder", dirpath))
+    # delete all folders
+    failed_deletions.extend(dir_ for dir_ in walk_dirs(rootpath) if not delete_dir(dir_))
 
-    if inclusive and (not delete_dir(folder_path)):
-        failed_deletions.append(("folder", str(folder_path)))
+    # delete the root if needed
+    if inclusive and not delete_dir(rootpath):
+        failed_deletions.append(rootpath)
 
     if failed_deletions:
-        _log.warning("could not delete the following items:\n%s", pformat(failed_deletions, width=120))
-        return False
+        _log.warning("Failed to delete the following targets:\n%s", pformat(failed_deletions, width=120))
 
-    return True
+    return not failed_deletions
 
 
 def prepare_tmp_location(src_path: Union[str, Path]) -> str:
     """Prepares timestamped dir in the system-wide TMP dir"""
 
-    src_path = Path(src_path).absolute()
-    tmp_dir = Path(tempfile.mkdtemp(prefix=src_path.stem, suffix=f"_{get_stamp()}"))
+    if not src_path:
+        raise ValueError()
+
+    src_path = Path(src_path)
+    tmp_dir = Path(tempfile.mkdtemp(prefix=src_path.stem, suffix=f"_{time_stamp()}"))
     tmp_location = tmp_dir.joinpath(src_path.name)
     _log.debug("prepared temp location for: '%s' at: '%s'", str(src_path), str(tmp_location))
     return str(tmp_location)
 
 
 def copy(src, dst, overwrite=False) -> str:
-    src_path, dst_path = Path(src).absolute(), Path(dst).absolute()
-    _log.debug("copying '%s' to '%s' ...", str(src_path), str(dst_path))
+    _log.debug("copying '%s' to '%s' ...", src, dst)
+    if (not src) or (not dst):
+        raise ValueError()
+
+    src_path, dst_path = Path(src), Path(dst)
 
     if not src_path.exists():
         raise FileNotFoundError(src_path)
@@ -192,8 +188,11 @@ def copy(src, dst, overwrite=False) -> str:
         if not can_write:
             raise FileExistsError(dst_path)
 
-    copy_func = shutil.copyfile if src_path.is_file() else shutil.copytree
-    copy_path = copy_func(str(src_path), str(dst_path))
+    if src_path.is_file():
+        copy_path = shutil.copyfile(str(src_path), str(dst_path))
+    else:
+        copy_path = shutil.copytree(str(src_path), str(dst_path))
+
     _log.debug("copied '%s' to '%s'", str(src_path), copy_path)
     return copy_path
 
@@ -204,26 +203,24 @@ def copy_to_tmp(src_path) -> str:
     return copy(src_path, prepare_tmp_location(src_path), overwrite=True)
 
 
-def view_file(path, safe=False):
+def view_file(file: Union[str, Path], safe=False):
     """Attempts to open the target file using the system-default viewer for the file type.
     Args:
-        path(str):  absolute path to the target file
+        file(str):  absolute path to the target file
         safe(bool): if passed will first copy the file to a temp location
 
     Returns:
         obj(str):   the path of the opened file.
     """
 
-    if (not path) or (not isinstance(path, (str, Path))):
-        raise ValueError(f"path must be non-empty string or Path instance! (Was:{path}")
+    if not file:
+        raise ValueError()
 
-    path = (path if isinstance(path, Path) else Path(path)).absolute()
-    _log.debug(f"Attempting to view file at: [ {str(path)} ]")
-
-    path = str(path.resolve())
+    filepath = Path(file)
+    _log.debug("Attempting to view file at: [ %s ]", str(filepath))
 
     if safe:
-        path = copy_to_tmp(path)
+        filepath = Path(copy_to_tmp(filepath))
 
     view_file_cmd = {
         os_type.LINUX: ["xdg-open"],
@@ -234,8 +231,8 @@ def view_file(path, safe=False):
     if not view_cmd:
         raise OSError("Unsupported os!")
 
-    view_cmd.append(str(path))
-    _log.debug(f"viewing file by using cmd: {str(view_cmd)}")
+    view_cmd.append(str(filepath))
+    _log.debug("viewing file by using cmd: %s", view_cmd)
 
     process = Process(target=partial(call, view_cmd), daemon=False)
     process.start()
@@ -246,7 +243,7 @@ def view_file(path, safe=False):
 def write_text(text: str, file, encoding="utf-8"):
     """Writes text contents to a target file, automatically creating parent dirs if needed."""
 
-    filepath = Path(file).absolute()
+    filepath = Path(file)
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text(text, encoding=encoding)
 
