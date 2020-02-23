@@ -13,7 +13,7 @@ from typing import Generator, Union
 
 from hed_utils.support import os_type
 
-Contents = namedtuple("Contents", "rootdir dirnames filenames")
+Contents = namedtuple("Contents", "dirpath dirnames filenames")
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
@@ -44,38 +44,30 @@ def time_stamp() -> str:
     return datetime.utcnow().strftime('%Y-%m-%d_%H_%M_%S')
 
 
-def walk_contents(rootpath: Union[str, Path], followlinks=False) -> Generator[Contents, None, None]:
-    """Recursively walks the given rootpath in bottom-up order, yielding Folder named-tuples"""
+def walk_contents(folder: Union[str, Path], followlinks=False) -> Generator[Contents, None, None]:
+    """Recursively walks the given rootpath in bottom-up order, yielding Contents tuples"""
 
-    if not rootpath:
-        raise ValueError()
+    folder = Path(folder).absolute()
+    _log.debug("walking folder contents of: %s", str(folder))
 
-    rootpath = Path(rootpath)
-
-    if not rootpath.exists():
-        raise FileNotFoundError(str(rootpath))
-
-    if not rootpath.is_dir():
-        raise NotADirectoryError(str(rootpath))
-
-    for rootdir, dirnames, filenames in walk(rootpath, topdown=False, followlinks=followlinks):
-        yield Contents(rootdir, dirnames, filenames)
+    for dirpath, dirnames, filenames in walk(folder, topdown=False, followlinks=followlinks):
+        yield Contents(dirpath, dirnames, filenames)
 
 
-def walk_files(rootpath: Union[str, Path]) -> Generator[Path, None, None]:
+def walk_files(folder: Union[str, Path]) -> Generator[Path, None, None]:
     """Recursively (bottom-up) walks the given folder's contents, yielding only file-paths."""
 
-    for contents in walk_contents(rootpath):
-        for file in contents.filenames:
-            yield Path(contents.rootdir).joinpath(file)
+    for contents in walk_contents(folder):
+        for filename in contents.filenames:
+            yield Path(contents.dirpath).joinpath(filename)
 
 
 def walk_dirs(rootpath: Union[str, Path]) -> Generator[Path, None, None]:
     """Recursively (bottom-up) walks the given folder's contents, yielding only folder-paths."""
 
     for contents in walk_contents(rootpath):
-        for folder in contents.dirnames:
-            yield Path(contents.rootdir).joinpath(folder)
+        for dirname in contents.dirnames:
+            yield Path(contents.dirpath).joinpath(dirname)
 
 
 def delete_file(filepath: Union[str, Path]) -> bool:
@@ -92,10 +84,7 @@ def delete_file(filepath: Union[str, Path]) -> bool:
         IsADirectoryError:  If the 'file' arg points to folder
     """
 
-    if not filepath:
-        raise ValueError()
-
-    filepath = Path(filepath)
+    filepath = Path(filepath).absolute()
 
     if filepath.exists():
         if filepath.is_file():
@@ -114,42 +103,40 @@ def delete_file(filepath: Union[str, Path]) -> bool:
         return True
 
 
-def delete_folder(rootpath: Union[str, Path], *, inclusive=True) -> bool:
+def delete_folder(folder: Union[str, Path], *, inclusive=True) -> bool:
     """Deletes folder contents recursively, starting from the innermost items.
 
     Args:
-        rootpath:           Path to the target folder
+        folder:           Path to the target folder
         inclusive(bool):    If True will delete the folder itself after all of it's contents were deleted.
 
     Returns:
         obj(bool):          True if all targets were deleted, False otherwise.
     """
 
-    def delete_dir(dirpath: Path):
-        if dirpath.exists():
+    def delete_dir(_dirpath: Path):
+        if _dirpath.exists():
             try:
-                dirpath.rmdir()
+                _dirpath.rmdir()
             except FileNotFoundError:
                 pass
 
-            return not dirpath.exists()
+            return not _dirpath.exists()
 
-    if not rootpath:
-        raise ValueError()
-
-    rootpath = Path(rootpath)
+    folder = Path(folder).absolute()
+    _log.debug("deleting folder at: '%s'", str(folder))
 
     failed_deletions = list()
 
     # delete all files
-    failed_deletions.extend(file for file in walk_files(rootpath) if not delete_file(file))
+    failed_deletions.extend(filepath for filepath in walk_files(folder) if not delete_file(filepath))
 
     # delete all folders
-    failed_deletions.extend(dir_ for dir_ in walk_dirs(rootpath) if not delete_dir(dir_))
+    failed_deletions.extend(dirpath for dirpath in walk_dirs(folder) if not delete_dir(dirpath))
 
     # delete the root if needed
-    if inclusive and not delete_dir(rootpath):
-        failed_deletions.append(rootpath)
+    if inclusive and not delete_dir(folder):
+        failed_deletions.append(folder)
 
     if failed_deletions:
         _log.warning("Failed to delete the following targets:\n%s", pformat(failed_deletions, width=120))
@@ -163,7 +150,7 @@ def prepare_tmp_location(src_path: Union[str, Path]) -> str:
     if not src_path:
         raise ValueError()
 
-    src_path = Path(src_path)
+    src_path = Path(src_path).absolute()
     tmp_dir = Path(tempfile.mkdtemp(prefix=src_path.stem, suffix=f"_{time_stamp()}"))
     tmp_location = tmp_dir.joinpath(src_path.name)
     _log.debug("prepared temp location for: '%s' at: '%s'", str(src_path), str(tmp_location))
@@ -171,29 +158,27 @@ def prepare_tmp_location(src_path: Union[str, Path]) -> str:
 
 
 def copy(src, dst, overwrite=False) -> str:
-    _log.debug("copying '%s' to '%s' ...", src, dst)
-    if (not src) or (not dst):
-        raise ValueError()
+    src, dst = Path(src).absolute(), Path(dst).absolute()
+    _log.debug("copying '%s' to '%s' ...", str(src), str(dst))
 
-    src_path, dst_path = Path(src), Path(dst)
+    if not src.exists():
+        raise FileNotFoundError(src)
 
-    if not src_path.exists():
-        raise FileNotFoundError(src_path)
-
-    if dst_path.exists():
+    if dst.exists():
         if not overwrite:
-            raise FileExistsError(dst_path)
+            raise FileExistsError(dst)
 
-        can_write = delete_file(dst_path) if dst_path.is_file() else delete_folder(dst_path, inclusive=True)
+        can_write = delete_file(dst) if dst.is_file() else delete_folder(dst, inclusive=True)
         if not can_write:
-            raise FileExistsError(dst_path)
+            raise FileExistsError(dst)
 
-    if src_path.is_file():
-        copy_path = shutil.copyfile(str(src_path), str(dst_path))
+    if src.is_file():
+        copy_path = shutil.copyfile(str(src), str(dst))
     else:
-        copy_path = shutil.copytree(str(src_path), str(dst_path))
+        copy_path = shutil.copytree(str(src), str(dst))
 
-    _log.debug("copied '%s' to '%s'", str(src_path), copy_path)
+    _log.debug("copied '%s' to '%s'", str(src), copy_path)
+
     return copy_path
 
 
@@ -213,11 +198,8 @@ def view_file(file: Union[str, Path], safe=False):
         obj(str):   the path of the opened file.
     """
 
-    if not file:
-        raise ValueError()
-
-    filepath = Path(file)
-    _log.debug("Attempting to view file at: [ %s ]", str(filepath))
+    filepath = Path(file).absolute()
+    _log.debug("viewing file at: '%s'", str(filepath))
 
     if safe:
         filepath = Path(copy_to_tmp(filepath))
@@ -232,7 +214,7 @@ def view_file(file: Union[str, Path], safe=False):
         raise OSError("Unsupported os!")
 
     view_cmd.append(str(filepath))
-    _log.debug("viewing file by using cmd: %s", view_cmd)
+    _log.debug("viewing file by using cmd: '%s'", view_cmd)
 
     process = Process(target=partial(call, view_cmd), daemon=False)
     process.start()
@@ -243,7 +225,7 @@ def view_file(file: Union[str, Path], safe=False):
 def write_text(text: str, file, encoding="utf-8"):
     """Writes text contents to a target file, automatically creating parent dirs if needed."""
 
-    filepath = Path(file)
+    filepath = Path(file).absolute()
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text(text, encoding=encoding)
 
