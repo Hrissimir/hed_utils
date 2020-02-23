@@ -52,9 +52,7 @@ Installation:
 
     * lxml
 
-    * xlrd
-
-    * xlwt
+    * openpyxl
 
     * oauth2client
 
