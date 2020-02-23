@@ -10,17 +10,14 @@ from hed_utils.support.file_utils.file_sys import (
     prepare_tmp_location,
     copy,
     copy_to_tmp,
-    view_file,
-    write_text,
-    view_text
+    view_file
 )
 
 from hed_utils.support.file_utils.json_file import read_json, write_json
-from hed_utils.support.file_utils.xlsx_file import read_xlsx_as_dict, write_xlsx_from_dict
-from hed_utils.support.file_utils.zip_file import (
-    extract_zip,
-    zip_dir,
-)
+from hed_utils.support.file_utils.text_file import file_contains_line, view_text, write_text
+from hed_utils.support.file_utils.zip_file import extract_zip, zip_dir
+
+from hed_utils.support.file_utils.xlsx_file import write_data_to_xlsx
 
 __all__ = [
     "Contents",
@@ -39,8 +36,9 @@ __all__ = [
     "view_text",
     "read_json",
     "write_json",
-    "write_xlsx_from_dict",
-    "read_xlsx_as_dict",
+    "file_contains_line",
+    "view_text",
+    "write_text",
     "extract_zip",
     "zip_dir"
 ]

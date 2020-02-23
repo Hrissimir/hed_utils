@@ -222,18 +222,3 @@ def view_file(file: Union[str, Path], safe=False):
     process.terminate()
 
 
-def write_text(text: str, file, encoding="utf-8"):
-    """Writes text contents to a target file, automatically creating parent dirs if needed."""
-
-    filepath = Path(file).absolute()
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    filepath.write_text(text, encoding=encoding)
-
-
-def view_text(text: str, encoding="utf-8"):
-    """Views a text by first writing it to a temp location,
-     then open it with the system handler for the .txt file-type."""
-
-    tmp_file = prepare_tmp_location("text_to_view.txt")
-    write_text(text, tmp_file, encoding)
-    view_file(tmp_file)
