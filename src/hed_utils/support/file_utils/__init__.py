@@ -13,32 +13,44 @@ from hed_utils.support.file_utils.file_sys import (
     view_file
 )
 
+from hed_utils.support.file_utils.csv_file import (
+    csv_file_contains,
+    csv_search_in_file,
+    csv_search_in_folder,
+    walk_csv_files,
+    walk_csv_files_containing
+)
+
 from hed_utils.support.file_utils.json_file import read_json, write_json
 from hed_utils.support.file_utils.text_file import file_contains_line, view_text, write_text
+from hed_utils.support.file_utils.xlsx_file import xlsx_workbook_from_sheets_data, xlsx_write_sheets_data
 from hed_utils.support.file_utils.zip_file import extract_zip, zip_dir
-
-from hed_utils.support.file_utils.xlsx_file import write_data_to_xlsx
 
 __all__ = [
     "Contents",
-    "format_size",
-    "time_stamp",
-    "walk_contents",
-    "walk_files",
-    "walk_dirs",
-    "delete_file",
-    "delete_folder",
-    "prepare_tmp_location",
     "copy",
     "copy_to_tmp",
-    "view_file",
-    "write_text",
-    "view_text",
-    "read_json",
-    "write_json",
-    "file_contains_line",
-    "view_text",
-    "write_text",
+    "csv_file_contains",
+    "csv_search_in_file",
+    "csv_search_in_folder",
+    "delete_file",
+    "delete_folder",
     "extract_zip",
+    "file_contains_line",
+    "format_size",
+    "prepare_tmp_location",
+    "read_json",
+    "time_stamp",
+    "view_file",
+    "view_text",
+    "xlsx_workbook_from_sheets_data",
+    "xlsx_write_sheets_data",
+    "walk_contents",
+    "walk_csv_files",
+    "walk_csv_files_containing",
+    "walk_dirs",
+    "walk_files",
+    "write_json",
+    "write_text",
     "zip_dir"
 ]

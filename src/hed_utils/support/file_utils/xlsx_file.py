@@ -1,110 +1,137 @@
+"""This module contains helper methods for dealing with excel files.
+        Credits: https://realpython.com/openpyxl-excel-spreadsheets-python/
+"""
 import logging
+import re
 from pathlib import Path
-from string import ascii_letters, digits, whitespace
-from typing import Dict, List, Union
+from typing import List
 
-from xlrd import open_workbook
-from xlwt import XFStyle, Workbook
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, NamedStyle, Side
+from openpyxl.worksheet.worksheet import Worksheet
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
 
-
-def _normalize_sheet_name(name) -> str:
-    if isinstance(name, float):
-        name = f"{name:.02f}"
-    elif not isinstance(name, str):
-        name = str(name)
-
-    name_chars = []
-    for char in name:
-        if (char in ascii_letters) or (char in digits):
-            name_chars.append(char)
-        elif char in whitespace:
-            name_chars.append(" ")
-        else:
-            name_chars.append("_")
-
-    name_normalized = "".join(name_chars)
-
-    _log.debug("normalized sheet name '%s' to '%s'", name, name_normalized)
-    return name_normalized
+_INVALID_SHEET_TITLE_REGEX = re.compile(r"[\\*?:/\[\]]")
 
 
-def read_xlsx_as_dict(file: str) -> Dict[str, List[Dict[str, Union[int, float, str]]]]:
-    """Reads excel file to a dictionary with the format {sheet_name: sheet_data_dict}"""
+def _sanitize_sheet_title(text: str) -> str:
+    """Strips the text and transforms it into valid worksheet title"""
 
-    if (not isinstance(file, str)) or (not file):
-        raise ValueError(f"file must be a non-empty string! (was: [{file}])")
-
-    file = str(Path(file).absolute())
-    _log.debug("reading excel sheets from: [%s] ...", file)
-
-    result = dict()
-
-    with open_workbook(file) as workbook:
-
-        for worksheet in workbook.sheets():
-
-            result[worksheet.name] = []
-            headers = [worksheet.cell_value(0, column_index) for column_index in range(worksheet.ncols)]
-
-            for row_index in range(1, worksheet.nrows):
-                row_data = {headers[column_index]: worksheet.cell_value(row_index, column_index)
-                            for column_index
-                            in range(worksheet.ncols)}
-
-                result[worksheet.name].append(row_data)
-
-    return result
+    text = text.strip()
+    return _INVALID_SHEET_TITLE_REGEX.sub("_", text) if _INVALID_SHEET_TITLE_REGEX.search(text) else text
 
 
-def write_xlsx_from_dict(sheets: Dict[str, List[Dict[str, Union[int, float, str]]]], file: str, *, floatfmt="##0.00"):
-    """ Writes multiple sheets data to a file.
+def _apply_header_style(sheet: Worksheet):
+    """Applies header style to the first row in the sheet."""
 
-    The column names for each sheet are the keys of the first dict record.
-    Automatically suffixes the file name with .xlsx if missing
-    Automatically transforms the sheet names to valid strings
+    style = NamedStyle(name="header")
+    style.font = Font(bold=True)
+    style.border = Border(bottom=Side(border_style="thin"))
+    style.alignment = Alignment(horizontal="center", vertical="center")
 
-    Arguments:
-        sheets(dict)    A dict with format { "sheet name": [ sheet records as dicts ] }
-        file(str)       The output destination file
-        floatfmt(str)   Format for float cells
+    header_row = sheet[1]
+    for cell in header_row:
+        cell.style = style
 
-    Returns:
-        dst_path(str)  Absolute path to the output file
 
+def _auto_filter(sheet: Worksheet):
+    """Adds auto-filter to all columns in the sheet"""
+
+    sheet.auto_filter.ref = sheet.dimensions
+
+
+def _freeze_header(sheet: Worksheet):
+    """Freezes the first row in the sheet"""
+
+    sheet.freeze_panes = "A2"
+
+
+def _append_sheet_data(workbook: Workbook, title, headers, rows) -> Worksheet:
+    """Creates new Worksheet in the Workbook, then fills-in the data and applies styling to the header"""
+
+    _log.debug("appending [%s] rows of sheet data with title '%s' and headers: %s", len(rows), title, headers)
+
+    effective_title = _sanitize_sheet_title(title)
+    if effective_title != title:
+        _log.warning("transformed invalid sheet title '%s' to valid one: '%s'", title, effective_title)
+
+    sheet = workbook.create_sheet(title=effective_title)
+
+    sheet.append(headers)
+    _apply_header_style(sheet)
+
+    for row in rows:
+        sheet.append(row)
+
+    return sheet
+
+
+def xlsx_workbook_from_sheets_data(sheets_data: List[tuple], *, auto_filter=True, freeze_header=True) -> Workbook:
+    """Creates openpyxl.Workbook instance and populates it using multiple sheets data.
+
+    Adds filters and freezes header by default.
+
+    :argument sheets_data
+        List containing tuples, each describing sheet data, with the following format
+        [(sheet1_title, sheet1_headers, sheet1_rows), (sheet2_title, sheet2_headers, sheet2_rows), ...]
+
+    :argument auto_filter
+        If True will add auto-filters in all of the created sheets
+
+    :argument freeze_header
+        If True will freeze the header row in every sheet
+
+    :returns
+        the populated openpyxl.Workbook instance
     """
 
-    if (not isinstance(file, str)) or (not file):
-        raise ValueError(f"file must be a non-empty string! (was: [{file}])")
+    _log.debug("creating Workbook and filling it with [ %s ] sheets data ...", len(sheets_data))
+    workbook = Workbook()
 
-    dst_path = str(Path(file if file.endswith(".xlsx") else f"{file}.xlsx").absolute())
-    _log.debug("writing excel sheets to: [ %s ] ...", file)
+    for title, headers, rows in sheets_data:
+        sheet = _append_sheet_data(workbook, title, headers, rows)
 
-    float_format = XFStyle()
-    float_format.num_format_str = floatfmt
-    output_workbook = Workbook()
+        if auto_filter:
+            _auto_filter(sheet)
 
-    for sheet_name, sheet_records in sheets.items():
-        sheet_name = _normalize_sheet_name(sheet_name)
-        sheet = output_workbook.add_sheet(sheet_name)
-        sheet.show_headers = True
-        columns = list(sheet_records[0].keys())
+        if freeze_header:
+            _freeze_header(sheet)
 
-        # write the headers
-        for column_index, column_name in enumerate(columns):
-            sheet.write(0, column_index, column_name)
+    return workbook
 
-        # write the records
-        for row_index, record in enumerate(sheet_records):
-            for column_index, column_name in enumerate(columns):
-                value = record[column_name]
-                if isinstance(value, float):
-                    sheet.write(row_index + 1, column_index, value, float_format)
-                else:
-                    sheet.write(row_index + 1, column_index, value)
 
-    output_workbook.save(dst_path)
+def xlsx_write_sheets_data(file: str, sheets_data: List[tuple], *, auto_filter=True, freeze_header=True) -> str:
+    """Writes multiple sheets data to .xlsx file. Adds filters and freezes header by default.
 
-    return dst_path
+    :argument file
+        Filepath pointing to where the data should be written.
+        (.xlsx is automatically appended if missing)
+
+    :argument sheets_data
+        List containing tuples, each describing sheet data, with the following format
+        [(sheet1_title, sheet1_headers, sheet1_rows), (sheet2_title, sheet2_headers, sheet2_rows), ...]
+
+    :argument auto_filter
+        If True will add auto-filters in all of the created sheets
+
+    :argument freeze_header
+        If True will freeze the header row in every sheet
+
+    :returns
+        absolute path to the file where the data was written
+    """
+
+    if not file.endswith(".xlsx"):
+        file = file + ".xlsx"
+
+    file = str(Path(file).absolute())
+    _log.debug("writing sheets data to .xlsx file at: '%s', auto-filter: %s, freeze-header: %s",
+               file, auto_filter, freeze_header)
+
+    workbook = xlsx_workbook_from_sheets_data(sheets_data, auto_filter=auto_filter, freeze_header=freeze_header)
+    workbook.save(file)
+
+    _log.debug("done writing sheets data to .xlsx file: '%s' !", file)
+    return file
