@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Generator, Union
 
 from hed_utils.support.file_utils.file_sys import walk_files
+from hed_utils.support.time_tool import Timer
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
@@ -107,8 +108,11 @@ def csv_search_in_folder(folder: Union[str, Path],
     """Performs a parallel search for all CSV files in the folder containing the given text,
     yielding tuples with the format: (filepath, headers, matching_rows)"""
 
-    target_files = list(walk_csv_files_containing(
-        folder, text, ignorecase=ignorecase, encoding=encoding, dialect=dialect))
+    with Timer() as files_timer:
+        target_files = list(walk_csv_files_containing(folder, text,
+                                                      ignorecase=ignorecase, encoding=encoding, dialect=dialect))
+    _log.debug("searching for CSV files containing '%s' in '%s' took %.3f s.", text, folder, files_timer.elapsed)
+
     text_args = [text] * len(target_files)
     ignorecase_args = [ignorecase] * len(target_files)
     encoding_args = [encoding] * len(target_files)
