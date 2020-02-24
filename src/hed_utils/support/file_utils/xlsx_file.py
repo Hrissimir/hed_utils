@@ -3,6 +3,7 @@
 """
 import logging
 import re
+from copy import copy
 from pathlib import Path
 from typing import List
 
@@ -17,8 +18,9 @@ _INVALID_SHEET_TITLE_REGEX = re.compile(r"[\\*?:/\[\]]")
 
 
 def _sanitize_sheet_title(text: str) -> str:
-    """Strips the text and transforms it into valid worksheet title"""
+    """Strips the text and transforms it into valid worksheet title by replacing the invalid chars with underscore"""
 
+    _log.debug("sanitizing sheet title '%s' ...", text)
     text = text.strip()
     return _INVALID_SHEET_TITLE_REGEX.sub("_", text) if _INVALID_SHEET_TITLE_REGEX.search(text) else text
 
@@ -26,26 +28,52 @@ def _sanitize_sheet_title(text: str) -> str:
 def _apply_header_style(sheet: Worksheet):
     """Applies header style to the first row in the sheet."""
 
+    _log.debug("applying header style to sheet: %s", sheet)
     style = NamedStyle(name="header")
-    style.font = Font(bold=True)
+    style.font = Font(name="Consolas", bold=True)
     style.border = Border(bottom=Side(border_style="thin"))
     style.alignment = Alignment(horizontal="center", vertical="center")
 
     header_row = sheet[1]
     for cell in header_row:
-        cell.style = style
+        try:
+            cell.style = style
+        except ValueError as err:
+            if "Style header exists already" in str(err):
+                cell.style = "header"
+            else:
+                raise
 
 
 def _auto_filter(sheet: Worksheet):
     """Adds auto-filter to all columns in the sheet"""
 
+    _log.debug("adding auto-filters to sheet: %s", sheet)
     sheet.auto_filter.ref = sheet.dimensions
 
 
 def _freeze_header(sheet: Worksheet):
     """Freezes the first row in the sheet"""
 
+    _log.debug("freezing header in sheet: %s", sheet)
     sheet.freeze_panes = "A2"
+
+
+def _optimize_columns_width(sheet: Worksheet):
+    """Optimizes the columns widths to match the contents"""
+
+    _log.debug("optimizing columns width in sheet: %s", sheet)
+    dims = {}
+    for row in sheet.rows:
+        for cell in row:
+            font = copy(cell.font)
+            font.name = "Consolas"
+            cell.font = font
+            if cell.value:
+                dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
+
+    for col, value in dims.items():
+        sheet.column_dimensions[col].width = value + 1
 
 
 def _append_sheet_data(workbook: Workbook, title, headers, rows) -> Worksheet:
@@ -90,8 +118,13 @@ def xlsx_workbook_from_sheets_data(sheets_data: List[tuple], *, auto_filter=True
     _log.debug("creating Workbook and filling it with [ %s ] sheets data ...", len(sheets_data))
     workbook = Workbook()
 
+    zero_sheet = workbook.active
+    workbook.remove(zero_sheet)
+
     for title, headers, rows in sheets_data:
         sheet = _append_sheet_data(workbook, title, headers, rows)
+
+        _optimize_columns_width(sheet)
 
         if auto_filter:
             _auto_filter(sheet)
