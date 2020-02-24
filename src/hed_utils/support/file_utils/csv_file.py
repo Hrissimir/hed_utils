@@ -79,7 +79,7 @@ def csv_search_in_file(file: Union[str, Path],
 
     with file.open(mode="r", encoding=encoding) as fp:
         reader = csv.reader(fp, dialect=dialect)
-        headers, rows = next(reader, default=tuple()), []
+        headers, rows = next(reader, tuple()), []
         if headers:
             try:
                 for row in reader:
@@ -107,15 +107,19 @@ def csv_search_in_folder(folder: Union[str, Path],
     """Performs a parallel search for all CSV files in the folder containing the given text,
     yielding tuples with the format: (filepath, headers, matching_rows)"""
 
-    target_files = list(
-        walk_csv_files_containing(folder, text, ignorecase=ignorecase, encoding=encoding, dialect=dialect))
+    target_files = list(walk_csv_files_containing(
+        folder, text, ignorecase=ignorecase, encoding=encoding, dialect=dialect))
     text_args = [text] * len(target_files)
     ignorecase_args = [ignorecase] * len(target_files)
     encoding_args = [encoding] * len(target_files)
     dialect_args = [dialect] * len(target_files)
 
     with ProcessPoolExecutor() as pool:
-        for file, headers, rows in pool.map(csv_search_in_file, text_args, ignorecase_args, encoding_args,
+        for file, headers, rows in pool.map(csv_search_in_file,
+                                            target_files,
+                                            text_args,
+                                            ignorecase_args,
+                                            encoding_args,
                                             dialect_args):
             if rows:
                 yield file, headers, rows
