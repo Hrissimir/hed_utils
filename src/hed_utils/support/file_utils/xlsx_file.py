@@ -7,8 +7,15 @@ from copy import copy
 from pathlib import Path
 from typing import List
 
+from openpyxl.styles import fonts
+
+# dirty hack to change the default font used by openpyxl
+_custom_font = copy(fonts.DEFAULT_FONT)
+_custom_font.name = "Consolas"
+fonts.DEFAULT_FONT = _custom_font
+
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, Border, NamedStyle, Side
+from openpyxl.styles import Alignment, Border, Font, NamedStyle, Side
 from openpyxl.worksheet.worksheet import Worksheet
 
 _log = logging.getLogger(__name__)
@@ -66,9 +73,6 @@ def _optimize_columns_width(sheet: Worksheet):
     dims = {}
     for row in sheet.rows:
         for cell in row:
-            font = copy(cell.font)
-            font.name = "Consolas"
-            cell.font = font
             if cell.value:
                 dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
 
