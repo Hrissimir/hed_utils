@@ -1,129 +1,68 @@
 import csv
 import logging
 from concurrent.futures import ProcessPoolExecutor
+from os import walk
+from os.path import abspath, join
 from pathlib import Path
-from typing import Generator, Union
-
-from hed_utils.support.file_utils.file_sys import walk_files
-from hed_utils.support.time_tool import Timer
+from typing import List, Union
 
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
 
 
-def walk_csv_files(folder: Union[str, Path]) -> Generator[Path, None, None]:
-    """Yields absolute paths to CSV files discovered in the given folder."""
+def get_csv_files(folder: Union[str, Path]) -> List[str]:
+    """Returns list with absolute paths to CSV files discovered in the given folder."""
 
-    _log.debug("walking CSV files in folder: '%s'", folder)
-    for filepath in walk_files(folder):
-        for suffix in filepath.suffixes:
-            if suffix.lower() == ".csv":
-                yield filepath
-                break
+    folder = abspath(folder)
+    _log.debug("getting CSV files in: '%s'", folder)
+    return [join(dirpath, filename)
+            for (dirpath, _, filenames) in walk(folder, topdown=False)
+            for filename in filenames
+            if filename.lower().endswith(".csv")]
 
 
-def csv_file_contains(file: Union[str, Path], text: str, *, ignorecase=True, encoding="utf-8", dialect="excel") -> bool:
-    """Checks if a CSV file contains the text in any of it's rows"""
+def get_csv_rows_containing(file, text, ignorecase, encoding, dialect="excel"):
+    """Searches for CSV rows in the file that contain the given text.
 
-    file = Path(file).absolute()
-    text = text.lower() if ignorecase else text
-    is_present = False
+    :returns tuple with format: (file, headers, rows) for convenience
+    """
 
-    with file.open(mode="r", encoding=encoding) as fp:
+    if ignorecase:
+        text = text.lower()
+
+    with open(file, mode="r", encoding=encoding) as fp:
         reader = csv.reader(fp, dialect=dialect)
         try:
+            headers, rows = next(reader), []
             for row in reader:
-                is_in_row = False
-
                 for item in row:
-                    item_text = item.lower() if ignorecase else item
-                    if text in item_text:
-                        is_in_row = True
-                        break
-
-                if is_in_row:
-                    is_present = True
-                    break
-
-        except StopIteration:
-            pass
-
-    _log.debug("CSV file contains text '%s': [ %s ] (ignorecase: %s, file: '%s')",
-               text, is_present, ignorecase, str(file))
-    return is_present
-
-
-def walk_csv_files_containing(folder: Union[str, Path],
-                              text: str,
-                              *,
-                              ignorecase=True,
-                              encoding="utf-8",
-                              dialect="excel") -> Generator[Path, None, None]:
-    """Walks the folder recursively, yielding paths to CSV files containing the given text"""
-
-    _log.debug("walking CSV files containing '%s' in folder: '%s'", folder, text)
-    for filepath in walk_csv_files(folder):
-        if csv_file_contains(filepath, text, ignorecase=ignorecase, encoding=encoding, dialect=dialect):
-            yield filepath
-
-
-def csv_search_in_file(file: Union[str, Path],
-                       text: str,
-                       ignorecase=True,
-                       encoding="utf-8",
-                       dialect="excel"):
-    """Searches in the file for CSV rows containing the text. Returns tuple (abspath, headers, matching_rows)"""
-
-    file = Path(file).absolute()
-    text = text.lower() if ignorecase else text
-    _log.debug("searching for CSV rows containing '%s', ignorecase: %s in '%s'", text, ignorecase, str(file))
-
-    with file.open(mode="r", encoding=encoding) as fp:
-        reader = csv.reader(fp, dialect=dialect)
-        headers, rows = next(reader, tuple()), []
-        if headers:
-            try:
-                for row in reader:
-
-                    for item in row:
-                        item_text = item.lower() if ignorecase else item
-
-                        if text in item_text:
+                    if ignorecase:
+                        if text in item.lower():
                             rows.append(row)
                             break
+                    elif text in item:
+                        rows.append(row)
+                        break
 
-            except StopIteration:
-                pass
+        except StopIteration:
+            headers, rows = (), []
 
-    file = str(file)
-    _log.debug("got [ %s ] matching rows in file: '%s'! Headers: %s", len(rows), file, headers)
+    _log.debug("got %5d CSV rows containing '%s' (ignorecase: %s) in file: '%s'", len(rows), text, ignorecase, file)
     return file, headers, rows
 
 
-def csv_search_in_folder(folder: Union[str, Path],
-                         text: str,
-                         ignorecase=True,
-                         encoding="utf-8",
-                         dialect="excel"):
-    """Performs a parallel search for all CSV files in the folder containing the given text,
-    yielding tuples with the format: (filepath, headers, matching_rows)"""
+def get_csv_files_containing(files, text, ignorecase, encoding, dialect="excel"):
+    """Checks the given files for CSV rows having the text, and returns all matching contents.
 
-    with Timer() as files_timer:
-        target_files = list(walk_csv_files_containing(folder, text,
-                                                      ignorecase=ignorecase, encoding=encoding, dialect=dialect))
-    _log.debug("searching for CSV files containing '%s' in '%s' took %.3f s.", text, folder, files_timer.elapsed)
+    The result has format [(file,headers,rows), (file2,headers2,rows2), ...] for convenience."""
 
-    text_args = [text] * len(target_files)
-    ignorecase_args = [ignorecase] * len(target_files)
-    encoding_args = [encoding] * len(target_files)
-    dialect_args = [dialect] * len(target_files)
-
+    args_len = len(files)
+    text_args = args_len * (text,)
+    ignorecase_args = args_len * (ignorecase,)
+    encoding_args = args_len * (encoding,)
+    dialect_args = args_len * (dialect,)
     with ProcessPoolExecutor() as pool:
-        for file, headers, rows in pool.map(csv_search_in_file,
-                                            target_files,
-                                            text_args,
-                                            ignorecase_args,
-                                            encoding_args,
-                                            dialect_args):
-            if rows:
-                yield file, headers, rows
+        return [(file, headers, rows)
+                for file, headers, rows
+                in pool.map(get_csv_rows_containing, files, text_args, ignorecase_args, encoding_args, dialect_args)
+                if rows]

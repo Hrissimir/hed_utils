@@ -14,11 +14,9 @@ from hed_utils.support.file_utils.file_sys import (
 )
 
 from hed_utils.support.file_utils.csv_file import (
-    csv_file_contains,
-    csv_search_in_file,
-    csv_search_in_folder,
-    walk_csv_files,
-    walk_csv_files_containing
+    get_csv_rows_containing,
+    get_csv_files,
+    get_csv_files_containing
 )
 
 from hed_utils.support.file_utils.json_file import read_json, write_json
@@ -35,13 +33,11 @@ __all__ = [
     "Contents",
     "copy",
     "copy_to_tmp",
-    "csv_file_contains",
-    "csv_search_in_file",
-    "csv_search_in_folder",
     "delete_file",
     "delete_folder",
     "extract_zip",
     "format_size",
+    "get_csv_rows_containing",
     "iter_files_containing_text_in_lines",
     "prepare_tmp_location",
     "read_json",
@@ -52,8 +48,8 @@ __all__ = [
     "xlsx_workbook_from_sheets_data",
     "xlsx_write_sheets_data",
     "walk_contents",
-    "walk_csv_files",
-    "walk_csv_files_containing",
+    "get_csv_files",
+    "get_csv_files_containing",
     "walk_dirs",
     "walk_files",
     "write_json",
