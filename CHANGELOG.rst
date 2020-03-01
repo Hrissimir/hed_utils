@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+Version 4.4.0
+=============
+
+- added 'csv-search' CLI binding.
+
+
 Version 4.3.0
 =============
 
