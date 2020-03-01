@@ -22,7 +22,12 @@ from hed_utils.support.file_utils.csv_file import (
 )
 
 from hed_utils.support.file_utils.json_file import read_json, write_json
-from hed_utils.support.file_utils.text_file import file_contains_line, view_text, write_text
+from hed_utils.support.file_utils.text_file import (
+    iter_files_containing_text_in_lines,
+    text_in_lines,
+    view_text,
+    write_text
+)
 from hed_utils.support.file_utils.xlsx_file import xlsx_workbook_from_sheets_data, xlsx_write_sheets_data
 from hed_utils.support.file_utils.zip_file import extract_zip, zip_dir
 
@@ -36,10 +41,11 @@ __all__ = [
     "delete_file",
     "delete_folder",
     "extract_zip",
-    "file_contains_line",
     "format_size",
+    "iter_files_containing_text_in_lines",
     "prepare_tmp_location",
     "read_json",
+    "text_in_lines",
     "time_stamp",
     "view_file",
     "view_text",

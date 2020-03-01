@@ -1,4 +1,5 @@
 import logging
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Union
 
@@ -8,23 +9,40 @@ _log = logging.getLogger(__name__)
 _log.addHandler(logging.NullHandler())
 
 
-def file_contains_line(file: Union[str, Path], text: str, *, encoding="utf-8", ignorecase=True) -> bool:
-    """Checks if the file contains the given text in any of it's lines"""
+def text_in_lines(file: Union[str, Path], text: str, ignorecase=True, encoding="utf-8") -> bool:
+    """Checks file contains the text in any of it's lines"""
 
-    filepath = Path(file).absolute()
-    text = text.lower() if ignorecase else text
-    is_present = False
-    with filepath.open(mode="r", encoding=encoding) as fp:
-        for file_line in fp:
-            file_line = file_line.lower() if ignorecase else file_line
-            if text in file_line:
-                is_present = True
-                break
+    if ignorecase:
+        text = text.lower()
 
-    _log.debug("line containing '%s' in file '%s' (ignorecase=%s) was present: [ %s ]",
-               text, str(filepath), ignorecase, is_present)
+    with open(file, mode="r", encoding=encoding) as fp:
+        for line in fp:
+            if ignorecase:
+                if text in line.lower():
+                    return True
+            else:
+                if text in line:
+                    return True
+    return False
 
-    return is_present
+
+def _check_file(file, text, ignorecase, encoding):
+    return file, text_in_lines(file, text, ignorecase, encoding)
+
+
+def iter_files_containing_text_in_lines(files, text, ignorecase, encoding):
+    """Searches files that contain the given text in any of their lines, and yields the ones that do."""
+
+    file_args = tuple(files)
+    args_count = len(file_args)
+    text_args = (text,) * args_count
+    ignorecase_args = (ignorecase,) * args_count
+    encoding_args = (encoding,) * args_count
+
+    with ProcessPoolExecutor() as pool:
+        for file, is_match in pool.map(_check_file, file_args, text_args, ignorecase_args, encoding_args):
+            if is_match:
+                yield file
 
 
 def view_text(text: str, encoding="utf-8"):
