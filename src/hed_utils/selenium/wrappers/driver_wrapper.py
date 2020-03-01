@@ -17,7 +17,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 from hed_utils.selenium import constants
-from hed_utils.selenium.utils import js_condition
+from hed_utils.selenium.utils import js_conditions
 from hed_utils.support import os_type
 
 _log = logging.getLogger(__name__)
@@ -399,7 +399,7 @@ class DriverWrapper(WebDriver):
         return self.wait(timeout).until(EC.url_matches(pattern))
 
     def wait_for_page_load(self):
-        js_condition.wait_for_page_load(self.wrapped_driver)
+        js_conditions.wait_for_page_load(self.wrapped_driver)
 
     def wait_for_alert(self, timeout=None) -> Alert:
         timeout = constants.ALERT_WAIT_TIMEOUT if timeout is None else timeout
