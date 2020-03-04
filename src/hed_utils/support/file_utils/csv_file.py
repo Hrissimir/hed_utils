@@ -30,23 +30,26 @@ def get_csv_rows_containing(file, text, ignorecase, encoding, dialect="excel"):
     if ignorecase:
         text = text.lower()
 
-    with open(file, mode="r", encoding=encoding) as fp:
-        reader = csv.reader(fp, dialect=dialect)
-        try:
-            headers, rows = next(reader), []
-            for row in reader:
-                for item in row:
-                    if ignorecase:
-                        if text in item.lower():
+    try:
+        with open(file, mode="r", encoding=encoding) as fp:
+            reader = csv.reader(fp, dialect=dialect)
+            try:
+                headers, rows = next(reader), []
+                for row in reader:
+                    for item in row:
+                        if ignorecase:
+                            if text in item.lower():
+                                rows.append(row)
+                                break
+                        elif text in item:
                             rows.append(row)
                             break
-                    elif text in item:
-                        rows.append(row)
-                        break
 
-        except StopIteration:
-            headers, rows = (), []
-
+            except StopIteration:
+                headers, rows = (), []
+    except UnicodeDecodeError:
+        _log.exception("Could not read file because of unicode error! File: '%s'", file)
+        headers, rows = (), []
     _log.debug("got %5d CSV rows containing '%s' (ignorecase: %s) in file: '%s'", len(rows), text, ignorecase, file)
     return file, headers, rows
 
@@ -61,6 +64,10 @@ def get_csv_files_containing(files, text, ignorecase, encoding, dialect="excel")
     ignorecase_args = args_len * (ignorecase,)
     encoding_args = args_len * (encoding,)
     dialect_args = args_len * (dialect,)
+
+    def on_result(r):
+        print(r.result())
+
     with ProcessPoolExecutor() as pool:
         return [(file, headers, rows)
                 for file, headers, rows
