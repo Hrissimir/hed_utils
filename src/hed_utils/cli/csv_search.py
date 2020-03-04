@@ -22,6 +22,7 @@ from tabulate import tabulate
 
 from hed_utils.support.file_utils.csv_file import get_csv_files, get_csv_files_containing
 from hed_utils.support.file_utils.xlsx_file import xlsx_write_sheets_data
+from hed_utils.support.text_tool import normalize
 from hed_utils.support.time_tool import Timer
 
 LOG_FORMAT = "%(asctime)s | %(levelname)8s | %(message)s"
@@ -132,7 +133,7 @@ def main(args):
 
     # extract args
     encoding = args.encoding
-    text = args.text.encode("utf-8").decode(encoding).strip()  # ensure encoding consistency
+    text = normalize(args.text.strip())  # ensure encoding consistency
     directory = abspath(args.directory)
     text_report_path = args.text_report
     excel_report_path = args.excel_report
