@@ -3,15 +3,16 @@
     The wait_for_page_load(driver,timeout) method is not using WebDriverWait, and this is done
     to have better polling precision and reduce execution time to the minimum required amount.
 
-    Worst-case execution time of '.wait_for_page_load()' method is ~0.45s.
+    Worst-case execution time of '.wait_for_page_load()' method is 0.55s.
     The term 'worst-case' refers to the situation where all conditions were met prior calling the method.
     To prevent flakiness some conditions require several confirmations to be met.
     The table below shows (ordered) details for every check that is done:
 
         CONDITION                    CONFIRMATIONS    POLL_FREQUENCY    WORST_CASE
         -------------------------  ---------------  ----------------  ------------
-        document_visible                         4             0.005         0.020
-        document_ready                          10             0.005         0.050
+        document_visible                         4             0.025         0.100
+        document_ready                           4             0.025         0.100
+        navigation_completed                     1             0.025         0.025
         jquery_defined                           1             0.005         0.005
         jquery_active_defined                    1             0.005         0.005
         jquery_not_active                       10             0.005         0.050
@@ -21,10 +22,10 @@
         angular_ready                           10             0.005         0.050
         angular5_defined                         1             0.005         0.005
         angular5_ready                          10             0.005         0.050
-        spinner_gone                            10             0.005         0.050
-        elements_loaded                          4             0.025         0.100
+        spinner_gone                             5             0.010         0.050
+        no_new_elements                          5             0.010         0.050
 
-        Worst-case total: 0.445s.
+        Worst-case total: 0.550s.
 """
 import logging
 from time import perf_counter
@@ -65,8 +66,8 @@ class DocumentVisible(JsCondition):
     name = "document_visible"
     script = "return document.visibilityState == 'visible';"
     confirmations_needed = 4
-    timeout = 10
-    poll_frequency = 0.005
+    timeout = 5
+    poll_frequency = 0.025
     on_success = "document_ready"
     on_fail = "document_ready"
 
@@ -74,9 +75,19 @@ class DocumentVisible(JsCondition):
 class DocumentReady(JsCondition):
     name = "document_ready"
     script = "return document.readyState == 'complete';"
-    confirmations_needed = 10
-    timeout = 30
-    poll_frequency = 0.005
+    confirmations_needed = 4
+    timeout = 10
+    poll_frequency = 0.025
+    on_success = "navigation_completed"
+    on_fail = "navigation_completed"
+
+
+class NavigationCompleted(JsCondition):
+    name = "navigation_completed"
+    script = "return window.performance.timing.loadEventEnd - window.performance.timing.navigationStart > 0;"
+    confirmations_needed = 1
+    timeout = 10
+    poll_frequency = 0.025
     on_success = "jquery_defined"
     on_fail = "jquery_defined"
 
@@ -175,19 +186,19 @@ class Angular5Ready(JsCondition):
 class SpinnerGone(JsCondition):
     name = "spinner_gone"
     script = "return $('.spinner').is(':visible') == false;"
-    confirmations_needed = 10
-    timeout = 30
-    poll_frequency = 0.005
-    on_success = "elements_loaded"
-    on_fail = "elements_loaded"
+    confirmations_needed = 5
+    timeout = 5
+    poll_frequency = 0.01
+    on_success = "no_new_elements"
+    on_fail = "no_new_elements"
 
 
-class ElementsLoaded(JsCondition):
-    name = "elements_loaded"
+class NoNewElements(JsCondition):
+    name = "no_new_elements"
     script = "return document.all.length;"
-    confirmations_needed = 4
-    timeout = 10
-    poll_frequency = 0.025
+    confirmations_needed = 5
+    timeout = 5
+    poll_frequency = 0.01
     on_success = None
     on_fail = None
 
@@ -212,6 +223,7 @@ class ElementsLoaded(JsCondition):
 PAGE_LOAD_CONDITIONS = (
     DocumentVisible,
     DocumentReady,
+    NavigationCompleted,
     JqueryDefined,
     JqueryActiveDefined,
     JqueryNotActive,
@@ -222,7 +234,7 @@ PAGE_LOAD_CONDITIONS = (
     Angular5Defined,
     Angular5Ready,
     SpinnerGone,
-    ElementsLoaded
+    NoNewElements
 )
 
 CONDITIONS_MAP = {condition_cls.name: condition_cls
