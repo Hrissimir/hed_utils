@@ -3,6 +3,13 @@ Changelog
 =========
 
 
+Version 4.5.0
+=============
+
+- bug-fixes for 'csv-search' CLI binding.
+- added module window_performance.py to pkg selenium.utils
+
+
 Version 4.4.0
 =============
 
