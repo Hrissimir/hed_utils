@@ -31,25 +31,6 @@ def test_parse_tamp_raises():
         time_tool.parse_numeric_timestamp(-1.2)
 
 
-def test_convert_to_tz():
-    datetime_utc = time_tool.utc_moment()
-    datetime_converted = time_tool.utc_to_tz(datetime_utc, "Europe/Sofia")
-
-    pattern = (
-        r"time.struct_time\(tm_year=(\d+), tm_mon=(\d+), tm_mday=(\d+), "
-        r"tm_hour=(\d+), tm_min=(\d+), tm_sec=(\d+),.*\)"
-    )
-
-    (u_year, u_month, u_day, u_hour, u_minute, u_second) = re.findall(pattern, str(datetime_utc.timetuple()))[0]
-    (c_year, c_month, c_day, c_hour, c_minute, c_second) = re.findall(pattern, str(datetime_converted.timetuple()))[0]
-    assert u_year == c_year
-    assert u_month == c_month
-    assert u_minute == c_minute
-    assert u_second == u_second
-    assert u_day == c_day or int(u_day) == int(c_day) - 1
-    assert abs((int(c_hour) - 2) % 24) == int(u_hour)
-
-
 def test_get_local_tz_name():
     expected_tzname = "Europe/Sofia"
     assert time_tool.get_local_tz_name() == expected_tzname

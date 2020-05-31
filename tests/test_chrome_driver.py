@@ -1,5 +1,7 @@
+import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import skipIf
 from unittest.mock import patch
 
 from selenium.webdriver import Chrome
@@ -7,6 +9,8 @@ from selenium.webdriver import Chrome
 from hed_utils.selenium import chrome_driver
 
 
+@skipIf(not shutil.which("google-chrome"), reason="Chrome browser not installed")
+@skipIf(not shutil.which("chromedriver"), reason="Chrome driver not installed")
 def test_create_instance():
     with patch("atexit.register", autospec=True)as mock_register:
         driver = chrome_driver.create_instance(headless=True)
@@ -17,6 +21,8 @@ def test_create_instance():
             driver.quit()
 
 
+@skipIf(not shutil.which("google-chrome"), reason="Chrome browser not installed")
+@skipIf(not shutil.which("chromedriver"), reason="Chrome driver not installed")
 def test_create_instance_with_downloads_dir():
     with TemporaryDirectory() as tmp_dir:
         downloads_dir = Path(tmp_dir).joinpath("chrome_downloads")
@@ -28,6 +34,8 @@ def test_create_instance_with_downloads_dir():
             driver.quit()
 
 
+@skipIf(not shutil.which("google-chrome"), reason="Chrome browser not installed")
+@skipIf(not shutil.which("chromedriver"), reason="Chrome driver not installed")
 def test_create_instance_with_user_data_dir():
     with TemporaryDirectory() as tmp_dir:
         user_data_dir = Path(tmp_dir).joinpath("chrome_user_data_dir")
