@@ -8,7 +8,7 @@ Version 4.6.0
 
 - updated dependencies
 - fixed broken tests
--
+- fixed warning in setup.cfg
 
 
 Version 4.5.0
