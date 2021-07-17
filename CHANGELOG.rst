@@ -3,6 +3,12 @@ Changelog
 =========
 
 
+Version 4.6.0
+=============
+
+- updated dependencies
+
+
 Version 4.5.0
 =============
 
