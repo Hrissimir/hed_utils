@@ -22,6 +22,10 @@ class LogTest(TestCase):
             excluded_msg = "im not"
             logger.debug(excluded_msg)
             self.assertNotIn(excluded_msg, log_file_path.read_text())
+            for handler in list(logger.handlers):
+                logger.removeHandler(handler)
+                handler.close()
+            log_file_path.unlink()
 
     def test_init(self):
         loglevel = logging.ERROR

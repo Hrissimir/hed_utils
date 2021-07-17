@@ -7,6 +7,8 @@ Version 4.6.0
 =============
 
 - updated dependencies
+- fixed broken tests
+-
 
 
 Version 4.5.0
