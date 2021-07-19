@@ -11,6 +11,38 @@ exception = LOGGER.exception
 info = LOGGER.info
 warning = LOGGER.warning
 
+_levelToName = {
+    logging.CRITICAL: "CRITICAL",
+    logging.ERROR: "ERROR",
+    logging.WARNING: "WARNING",
+    logging.INFO: "INFO",
+    logging.DEBUG: "DEBUG",
+    logging.NOTSET: "NOTSET",
+}
+
+_nameToLevel = {
+    "CRITICAL": logging.CRITICAL,
+    "FATAL": logging.FATAL,
+    "ERROR": logging.ERROR,
+    "WARN": logging.WARNING,
+    "WARNING": logging.WARNING,
+    "INFO": logging.INFO,
+    "DEBUG": logging.DEBUG,
+    "NOTSET": logging.NOTSET,
+}
+
+
+def level_to_name(level: int) -> str:
+    """Convert int value of log-level to name."""
+
+    return _levelToName[level]
+
+
+def name_to_level(name: str) -> int:
+    """Convert name of log-level to int value."""
+
+    return _nameToLevel[name.strip().upper()]
+
 
 def add_file_handler(logger: logging.Logger, file: str, level: int = None, log_format: str = None):
     """Creates and attaches file handler to the passed logger."""
