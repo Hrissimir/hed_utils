@@ -70,6 +70,39 @@ def string_value(
         raise ValueError(name, value)
 
 
+def path_value(name: str, value: Union[bytes, str, PathLike]) -> Path:
+    """Check and pre-process param value to Path
+
+    Args:
+        name (str): Parameter name.
+        value ([bytes, str, PathLike, Path]): Param value.
+
+    Returns:
+         Path: normalized, absolute and resolved.
+
+    Raises:
+        TypeError: if the value type is not in (bytes, str, PathLike).
+        ValueError: if the value was empty or could not be converted to Path.
+    """
+
+    if not isinstance(value, (bytes, str, PathLike, Path)):
+        raise TypeError(name, (bytes, str, PathLike, Path), type(value))
+
+    path = fspath(value)
+    if isinstance(path, bytes):
+        try:
+            path = path.decode(encoding="utf-8")
+        except UnicodeError:
+            path = path.decode(encoding="latin-1", errors="ignore")
+
+    path = string_value(name, path, empty_ok=False, none_ok=False)
+
+    try:
+        return Path(normpath(path)).absolute().resolve(strict=False)
+    except Exception as ex:
+        raise ValueError(name, value) from ex
+
+
 def file_path(name: str, value: Union[bytes, str, PathLike], *, readable: bool) -> Path:
     """Check and pre-process file path param value.
 
@@ -88,22 +121,7 @@ def file_path(name: str, value: Union[bytes, str, PathLike], *, readable: bool) 
         FileNotFoundError: if the file does not exist and `readable` == True.
     """
 
-    if not isinstance(value, (bytes, str, PathLike, Path)):
-        raise TypeError(name, (bytes, str, PathLike, Path), type(value))
-
-    path = fspath(value)
-    if isinstance(path, bytes):
-        try:
-            path = path.decode(encoding="utf-8")
-        except UnicodeError:
-            path = path.decode(encoding="latin-1", errors="ignore")
-
-    path = string_value(name, path, empty_ok=False, none_ok=False)
-
-    try:
-        path = Path(normpath(path)).absolute().resolve(strict=False)
-    except Exception as ex:
-        raise ValueError(name, value) from ex
+    path = path_value(name, value)
 
     if path.exists() and path.is_dir():
         raise IsADirectoryError(name, value, path)
