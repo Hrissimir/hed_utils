@@ -103,3 +103,16 @@ def split_to_lines(text: str, *, strip_text=True, strip_lines=True, keep_empty_l
 
 def split_to_words(text: str) -> List[str]:
     return re.split(r"\s+", text)
+
+
+def is_quoted(text: str) -> bool:
+    for ch in "\"'`":
+        if text.startswith(ch) and text.endswith(ch):
+            return True
+    return False
+
+
+def strip_quotes(text: str) -> str:
+    while is_quoted(text):
+        text = text[1:-1]
+    return text
