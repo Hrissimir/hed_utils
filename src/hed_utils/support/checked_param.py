@@ -5,6 +5,7 @@ from os.path import normpath
 from pathlib import Path
 from typing import Optional
 from typing import Union
+from math import inf
 
 
 def string_value(
@@ -68,6 +69,40 @@ def string_value(
         return result
     else:
         raise ValueError(name, value)
+
+
+def int_value(name: str,
+              value: Optional[Union[int, str]],
+              *,
+              none_ok=True,
+              str_ok=True,
+              min_allowed=-inf,
+              max_allowed=inf) -> Optional[int]:
+
+    if value is None:
+        if none_ok:
+            return None
+        else:
+            raise ValueError(name, None)
+
+    result = value
+    if isinstance(value, str):
+        if str_ok:
+            result = string_value(name, value, empty_ok=False)
+            try:
+                result = int(result)
+            except ValueError as ve:
+                raise ValueError(name, value) from ve
+        else:
+            raise TypeError(name, int, str)
+
+    if not isinstance(result, int):
+        raise TypeError(name, int, type(result))
+
+    if min_allowed <= result <= max_allowed:
+        return result
+    else:
+        raise ValueError(name, (min_allowed, max_allowed), value)
 
 
 def path_value(name: str, value: Union[bytes, str, PathLike]) -> Path:

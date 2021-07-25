@@ -20,6 +20,20 @@ class CliArg:
     """Defines parsing and validation for different types of CLI args."""
 
     @staticmethod
+    def existing_path(value) -> Path:
+        """Returns resolved Path to existing location on the filesystem."""
+
+        try:
+            path = checked_param.path_value("existing_path", value)
+        except Exception as ex:
+            raise ArgumentTypeError() from ex
+
+        if not path.exists():
+            raise ArgumentTypeError(f"non-existing path: '{path}'")
+
+        return path
+
+    @staticmethod
     def writable_file_path(value) -> Path:
         """Returns normalized, absolute and resolved Path to existing file."""
 
@@ -117,11 +131,10 @@ class CliCommand(ABC):
         pass
 
     @property
-    @abstractmethod
     def description(self) -> str:
         """Brief command description printed in CLI help."""
 
-        pass
+        return type(self).__doc__
 
     @abstractmethod
     def run(self, *args):
