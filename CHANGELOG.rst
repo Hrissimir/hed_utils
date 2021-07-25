@@ -7,6 +7,7 @@ Version 4.6.0
 =============
 
 - updated dependencies
+- updated pytest.ini
 
 
 Version 4.5.0
