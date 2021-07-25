@@ -1,5 +1,6 @@
+import sys
 from unittest import TestCase
-
+from unittest import skipIf
 from hed_utils.support import text_tool
 
 
@@ -29,7 +30,6 @@ class TestTextTool(TestCase):
         self.assertEqual("a b c d e f", text_tool.normalize_spacing(raw_text))
 
     def test_html_escape_unescape(self):
-        expected = "&lt;"
         self.assertEqual("&lt;", text_tool.html_escape("<"))
         self.assertEqual("<", text_tool.html_unescape("&lt;"))
 
@@ -66,6 +66,7 @@ class TestTextTool(TestCase):
         expected_dates = ["2020-01-23"]
         self.assertListEqual(expected_dates, text_tool.find_dates(text))
 
+    @skipIf(sys.platform == "linux", "OS encoding issue")
     def test_normalize(self):
         raw_items = ["Une conservation téléphonique", "Les vacances d'été"]
         expected_normalized_items = ['Une conservation telephonique', "Les vacances d'ete"]
