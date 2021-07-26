@@ -6,8 +6,8 @@ Changelog
 Version 4.6.0
 =============
 
+- changed CLI params
 - updated dependencies
-- updated pytest.ini
 
 
 Version 4.5.0

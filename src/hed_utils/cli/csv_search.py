@@ -1,29 +1,40 @@
-"""
-usage: nap_search.py [-h] [-t TEXT] [-d DIRECTORY] [-of OUTPUT_FILE]
+"""usage: csv-search [-h] [-v] [-vv] [--log-format LOG_FORMAT] [-d DIRECTORY] [-o TEXT_REPORT] [-xl EXCEL_REPORT] [-e ENCODING] -t TEXT [-i]
 
 Find text in CSV files.
 
 optional arguments:
-  -h, --help       show this help message and exit
-  -t TEXT          the text to find
-  -d DIRECTORY     path to CSV files directory
-  -of OUTPUT_FILE  path to result output file
+  -h, --help            show this help message and exit
+  -d DIRECTORY          path to CSV files directory (default: CWD)
+  -o TEXT_REPORT        filepath for writing text report
+  -xl EXCEL_REPORT      filepath for writing excel report
+  -e ENCODING           encoding for opening the CSV files (default: utf-8)
+  -t TEXT               the text to find
+  -i                    if passed search will ignore casing (default: False)
 
+  logging related
+
+  -v, --verbose         set log level to INFO
+  -vv, --very-verbose   set log level to DEBUG
+  --log-format LOG_FORMAT
+                        set custom log format
 """
-import argparse
 import logging
 import sys
 from collections import namedtuple
 from io import StringIO
-from os import getcwd
 from os.path import abspath, basename
+from pathlib import Path
 
-from tabulate import tabulate
-
-from hed_utils.support.file_utils.csv_file import get_csv_files, get_csv_files_containing
+from hed_utils.cli.arguments import create_parser
+from hed_utils.cli.arguments import input_folder_path
+from hed_utils.cli.arguments import output_file_path
+from hed_utils.cli.arguments import string_value
+from hed_utils.support.file_utils.csv_file import get_csv_files
+from hed_utils.support.file_utils.csv_file import get_csv_files_containing
 from hed_utils.support.file_utils.xlsx_file import xlsx_write_sheets_data
 from hed_utils.support.text_tool import normalize
 from hed_utils.support.time_tool import Timer
+from tabulate import tabulate
 
 LOG_FORMAT = "%(asctime)s | %(levelname)8s | %(message)s"
 
@@ -34,48 +45,44 @@ _log.addHandler(logging.NullHandler())
 
 
 def _parse_args(args):
-    parser = argparse.ArgumentParser(description="Find text in CSV files.")
+    parser = create_parser(
+        name="csv-search",
+        description="Find text in CSV files."
+    )
 
-    parser.add_argument("-v",
-                        dest="verbose",
-                        action="store_const",
-                        const=logging.DEBUG,
-                        default=logging.INFO,
-                        help="sets the log level to DEBUG")
     parser.add_argument("-d",
                         dest="directory",
                         action="store",
-                        type=str,
-                        default=getcwd(),
+                        type=input_folder_path,
+                        default=Path.cwd(),
                         help=f"path to CSV files directory (default: CWD)")
     parser.add_argument("-o",
                         dest="text_report",
                         action="store",
-                        type=str,
+                        type=output_file_path,
                         default=None,
-                        help="filepath for writing text report ")
+                        help="filepath for writing text report")
     parser.add_argument("-xl",
                         dest="excel_report",
                         action="store",
-                        type=str,
+                        type=output_file_path,
                         default=None,
                         help="filepath for writing excel report")
     parser.add_argument("-e",
                         dest="encoding",
                         action="store",
                         default="utf-8",
+                        type=string_value,
                         help="encoding for opening the CSV files (default: utf-8)")
     parser.add_argument("-t",
                         dest="text",
                         action="store",
-                        type=str,
+                        type=string_value,
                         required=True,
                         help="the text to find")
     parser.add_argument("-i",
                         dest="ignorecase",
-                        action="store_const",
-                        const=True,
-                        default=False,
+                        action="store_true",
                         help="if passed search will ignore casing (default: False)")
 
     return parser.parse_args(args)
