@@ -6,11 +6,8 @@ Changelog
 Version 4.6.0
 =============
 
-- added module ``hed_utils.cli.cli_command``
-- added module ``hed_utils.support.checked_param``
+- changed CLI params
 - updated dependencies
-- fixed broken tests
-- fixed warning in setup.cfg
 
 
 Version 4.5.0
