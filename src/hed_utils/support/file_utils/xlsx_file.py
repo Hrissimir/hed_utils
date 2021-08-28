@@ -14,7 +14,7 @@ _custom_font = copy(fonts.DEFAULT_FONT)
 _custom_font.name = "Consolas"
 fonts.DEFAULT_FONT = _custom_font
 
-from openpyxl import Workbook
+from openpyxl import Workbook  # pylint: disable E402
 from openpyxl.styles import Alignment, Border, Font, NamedStyle, Side
 from openpyxl.worksheet.worksheet import Worksheet
 

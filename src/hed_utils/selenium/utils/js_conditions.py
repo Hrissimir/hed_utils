@@ -288,7 +288,7 @@ def wait_for_page_load(driver, *, timeout=PAGE_LOAD_TIMEOUT, log_details=True):
     _log.debug(f"page loaded: {page_loaded} (took: {load_duration:.3f}s.)")
     if log_details:
         details = tabulate(history, headers="CONDITION IS_MET TOOK REMAINING".split(), floatfmt=".3f")
-        _log.debug(f"page load details:\n%s", details)
+        _log.debug("page load details:\n%s", details)
 
 
 def load_url(driver: WebDriver, url: str, *, timeout=PAGE_LOAD_TIMEOUT, log_details=True):

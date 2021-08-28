@@ -220,5 +220,3 @@ def view_file(file: Union[str, Path], safe=False):
     process.start()
     process.join(timeout=5)
     process.terminate()
-
-

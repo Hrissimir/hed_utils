@@ -1,4 +1,7 @@
-"""usage: csv-search [-h] [-v] [-vv] [--log-format LOG_FORMAT] [-d DIRECTORY] [-o TEXT_REPORT] [-xl EXCEL_REPORT] [-e ENCODING] -t TEXT [-i]
+"""usage: csv-search [-h]
+                        [-v] [-vv] [--log-format LOG_FORMAT]
+                        [-d DIRECTORY] [-o TEXT_REPORT] [-xl EXCEL_REPORT]
+                        [-e ENCODING] -t TEXT [-i]
 
 Find text in CSV files.
 
@@ -55,7 +58,7 @@ def _parse_args(args):
                         action="store",
                         type=input_folder_path,
                         default=Path.cwd(),
-                        help=f"path to CSV files directory (default: CWD)")
+                        help="path to CSV files directory (default: CWD)")
     parser.add_argument("-o",
                         dest="text_report",
                         action="store",
