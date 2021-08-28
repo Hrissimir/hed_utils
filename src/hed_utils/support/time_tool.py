@@ -55,7 +55,7 @@ def utc_moment() -> datetime:
 def get_local_tz_name() -> str:
     """Returns the time-zone name of the current system."""
 
-    return tzlocal.get_localzone().zone
+    return str(tzlocal.get_localzone())
 
 
 def localize(naive_datetime: datetime, tz_name: Optional[str] = None) -> datetime:
