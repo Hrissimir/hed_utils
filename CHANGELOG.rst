@@ -3,6 +3,14 @@ Changelog
 =========
 
 
+Version 5.0.0
+=============
+
+- updated project to match latest PyScaffold project structure
+- fixed bug with SharedDriver
+- removed some unneeded dependencies
+
+
 Version 4.6.1
 =============
 
